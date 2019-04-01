@@ -40,6 +40,18 @@ class AuthenticationContext {
             return this.acquireTokenAsync(tenant, resource, scope, clientId, redirectUri, true);
         });
     }
+    getCachedResult(resource, clientId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = this.tokenCache.loadFromCache({
+                authority: this.authority,
+                resource: resource,
+                clientId: clientId,
+                subjectType: TokenCache_1.TokenSubjectType.Client,
+                extendedLifeTimeEnabled: false,
+            });
+            return result.result;
+        });
+    }
     acquireTokenAsync(tenant, resource, scope = "user_impersonation", clientId, redirectUri = null, silent = false) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!redirectUri) {
