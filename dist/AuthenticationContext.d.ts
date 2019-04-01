@@ -19,5 +19,7 @@ export declare class AuthenticationContext {
     private redirectUri;
     private tokenCache;
     constructor(authority: string, authorizeUrl: string, accessTokenUrl: string, redirectUri: string);
-    acquireTokenAsync(tenant: string, resource: string, scope: string, clientId: string, redirectUri?: string): Promise<AuthenticationResult>;
+    acquireTokenSilentAsync(tenant: string, resource: string, scope: string, clientId: string, redirectUri?: string): Promise<AuthenticationResult>;
+    acquireTokenAsync(tenant: string, resource: string, scope: string, clientId: string, redirectUri?: string, silent?: boolean): Promise<AuthenticationResult>;
+    clearCache(): void;
 }

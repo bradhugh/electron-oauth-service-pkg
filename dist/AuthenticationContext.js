@@ -35,7 +35,12 @@ class AuthenticationContext {
         this.redirectUri = redirectUri;
         this.tokenCache = new TokenCache_1.TokenCache();
     }
-    acquireTokenAsync(tenant, resource, scope = "user_impersonation", clientId, redirectUri = null) {
+    acquireTokenSilentAsync(tenant, resource, scope, clientId, redirectUri = null) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.acquireTokenAsync(tenant, resource, scope, clientId, redirectUri, true);
+        });
+    }
+    acquireTokenAsync(tenant, resource, scope = "user_impersonation", clientId, redirectUri = null, silent = false) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!redirectUri) {
                 redirectUri = this.redirectUri;
@@ -56,9 +61,15 @@ class AuthenticationContext {
                     return result.result;
                 }
             }
+            if (silent) {
+                return result.result;
+            }
             result = yield Utils_1.Utils.getAuthTokenInteractiveAsync(this.authority, this.authorizeUrl, this.accessTokenUrl, clientId, redirectUri, tenant, resource, scope, this.tokenCache);
             return result.result;
         });
+    }
+    clearCache() {
+        this.tokenCache.clear();
     }
 }
 exports.AuthenticationContext = AuthenticationContext;
