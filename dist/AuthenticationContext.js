@@ -41,14 +41,17 @@ class AuthenticationContext {
         });
     }
     getCachedResult(resource, clientId) {
-        const result = this.tokenCache.loadFromCache({
+        let exResult = this.tokenCache.loadFromCache({
             authority: this.authority,
             resource: resource,
             clientId: clientId,
             subjectType: TokenCache_1.TokenSubjectType.Client,
             extendedLifeTimeEnabled: false,
         });
-        return result.result;
+        if (exResult) {
+            return exResult.result;
+        }
+        return new AuthenticationResult(null, null, null);
     }
     acquireTokenAsync(tenant, resource, scope = "user_impersonation", clientId, redirectUri = null, silent = false) {
         return __awaiter(this, void 0, void 0, function* () {
