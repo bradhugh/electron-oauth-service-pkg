@@ -1,7 +1,4 @@
-export declare class UserInfo {
-    uniqueId?: string;
-    displayableId?: string;
-}
+import { UserInfo } from "./UserInfo";
 export declare class AuthenticationResult {
     accessToken: string;
     accessTokenType: string;
@@ -14,15 +11,4 @@ export declare class AuthenticationResult {
     userInfo: UserInfo;
     constructor(accessTokenType: string, accessToken: string, expiresOn: Date, extendedExpiresOn?: Date);
     updateTenantAndUserInfo(tenantId: string, idToken: string, userInfo: UserInfo): void;
-}
-export declare class AuthenticationResultEx {
-    result: AuthenticationResult;
-    refreshToken: string;
-    isMultipleResourceRefreshToken: boolean;
-    resourceInResponse: string;
-    error: Error;
-    userAssertionHash: string;
-    static deserialize(serializedObject: string): AuthenticationResultEx;
-    serialize(): string;
-    clone(): AuthenticationResultEx;
 }

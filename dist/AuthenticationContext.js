@@ -8,25 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const AuthenticationResult_1 = require("./AuthenticationResult");
+const TokenCacheKey_1 = require("./internal/cache/TokenCacheKey");
+const TokenCache_1 = require("./TokenCache");
 const Utils_1 = require("./Utils");
-const TokenCache_1 = require("./cache/TokenCache");
-class UserInfo {
-}
-exports.UserInfo = UserInfo;
-class AuthenticationResult {
-    constructor(accessTokenType, accessToken, expiresOn, extendedExpiresOn) {
-        this.accessTokenType = accessTokenType;
-        this.accessToken = accessToken;
-        this.expiresOn = expiresOn;
-        if (extendedExpiresOn) {
-            this.extendedExpiresOn = extendedExpiresOn;
-        }
-        else {
-            this.extendedExpiresOn = expiresOn;
-        }
-    }
-}
-exports.AuthenticationResult = AuthenticationResult;
 class AuthenticationContext {
     constructor(authority, authorizeUrl, accessTokenUrl, redirectUri) {
         this.authority = authority;
@@ -41,17 +26,17 @@ class AuthenticationContext {
         });
     }
     getCachedResult(resource, clientId) {
-        let exResult = this.tokenCache.loadFromCache({
+        const exResult = this.tokenCache.loadFromCache({
             authority: this.authority,
-            resource: resource,
-            clientId: clientId,
-            subjectType: TokenCache_1.TokenSubjectType.Client,
+            resource,
+            clientId,
+            subjectType: TokenCacheKey_1.TokenSubjectType.Client,
             extendedLifeTimeEnabled: false,
         });
         if (exResult) {
             return exResult.result;
         }
-        return new AuthenticationResult(null, null, null);
+        return new AuthenticationResult_1.AuthenticationResult(null, null, null);
     }
     acquireTokenAsync(tenant, resource, scope = "user_impersonation", clientId, redirectUri = null, silent = false) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -60,9 +45,9 @@ class AuthenticationContext {
             }
             let result = this.tokenCache.loadFromCache({
                 authority: this.authority,
-                resource: resource,
-                clientId: clientId,
-                subjectType: TokenCache_1.TokenSubjectType.Client,
+                resource,
+                clientId,
+                subjectType: TokenCacheKey_1.TokenSubjectType.Client,
                 extendedLifeTimeEnabled: false,
             });
             if (result && result.result && result.result.accessToken) {

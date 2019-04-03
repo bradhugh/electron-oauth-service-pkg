@@ -9,16 +9,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
-const querystring = require("querystring");
 const electron_oauth_helper_1 = require("electron-oauth-helper");
-const TokenCache_1 = require("./cache/TokenCache");
+const querystring = require("querystring");
 const AuthenticationResult_1 = require("./AuthenticationResult");
+const AuthenticationResultEx_1 = require("./AuthenticationResultEx");
+const TokenCacheKey_1 = require("./internal/cache/TokenCacheKey");
 class Utils {
     static tokenTimeToJsDate(time) {
         if (!time) {
             return null;
         }
-        const secs = parseInt(time);
+        const secs = parseInt(time, 10);
         const jan11970 = Date.UTC(1970, 1, 1, 0, 0, 0, 0);
         const date = new Date(jan11970 + (secs * 1000));
         return date;
@@ -29,22 +30,27 @@ class Utils {
                 grant_type: "refresh_token",
                 refresh_token: resultEx.refreshToken,
                 scope: "openid",
-                resource: resource,
+                resource,
                 client_id: clientId,
             });
             if (postResponse.statusCode !== 200) {
+                console.log("FAILED RESPONSE:");
+                console.log(postResponse.body.toString("utf8"));
                 throw new Error(`Failed to refresh token. Error: ${postResponse.statusCode} - ${postResponse.statusMessage}`);
             }
-            const responseString = postResponse.body.toString('utf8');
+            const responseString = postResponse.body.toString("utf8");
+            console.log("****POST RESPONSE****");
+            console.log(responseString);
             const response = JSON.parse(responseString);
             resultEx.result = new AuthenticationResult_1.AuthenticationResult(response.token_type, response.access_token, Utils.tokenTimeToJsDate(response.expires_on), null);
             if (!response.refresh_token) {
-                console.log("Refresh token was missing from the token refresh response, so the refresh token in the request is returned instead");
+                console.log("Refresh token was missing from the token refresh response, " +
+                    "so the refresh token in the request is returned instead");
             }
             else {
                 resultEx.refreshToken = response.refresh_token;
             }
-            tokenCache.storeToCache(resultEx, authority, resource, clientId, TokenCache_1.TokenSubjectType.Client);
+            tokenCache.storeToCache(resultEx, authority, resource, clientId, TokenCacheKey_1.TokenSubjectType.Client);
             return resultEx;
         });
     }
@@ -64,17 +70,27 @@ class Utils {
                 height: 800,
                 webPreferences: {
                     nodeIntegration: false,
-                    contextIsolation: true
+                    contextIsolation: true,
                 },
             });
             try {
                 const response = yield provider.perform(authWindow);
-                const result = new AuthenticationResult_1.AuthenticationResult(response.token_type, response.access_token, Utils.tokenTimeToJsDate(response.expires_on), null);
-                const exResult = new AuthenticationResult_1.AuthenticationResultEx();
+                const expiresInSeconds = parseInt(response.expires_in.toString(), 10);
+                let extExpiresInSeconds = parseInt(response.ext_expires_in.toString(), 10);
+                if (extExpiresInSeconds < expiresInSeconds) {
+                    console.log(`ExtendedExpiresIn(${extExpiresInSeconds}) is less than ExpiresIn(${expiresInSeconds}).` +
+                        "Set ExpiresIn as ExtendedExpiresIn");
+                    extExpiresInSeconds = expiresInSeconds;
+                }
+                const now = new Date();
+                const expiresIn = new Date(now.getTime() + (expiresInSeconds * 1000));
+                const extExpiresIn = new Date(now.getTime() + (extExpiresInSeconds * 1000));
+                const result = new AuthenticationResult_1.AuthenticationResult(response.token_type, response.access_token, expiresIn, extExpiresIn);
+                const exResult = new AuthenticationResultEx_1.AuthenticationResultEx();
                 exResult.result = result;
                 exResult.refreshToken = response.refresh_token;
                 exResult.error = null;
-                tokenCache.storeToCache(exResult, authority, resourceId, clientId, TokenCache_1.TokenSubjectType.Client);
+                tokenCache.storeToCache(exResult, authority, resourceId, clientId, TokenCacheKey_1.TokenSubjectType.Client);
                 return exResult;
             }
             finally {
@@ -91,12 +107,12 @@ class Utils {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
-                    "Content-Length": Buffer.byteLength(postData)
-                }
+                    "Content-Length": Buffer.byteLength(postData),
+                },
             });
-            request.on("response", response => {
+            request.on("response", (response) => {
                 const datas = [];
-                response.on("data", chunk => {
+                response.on("data", (chunk) => {
                     datas.push(chunk);
                 });
                 response.on("end", () => {
@@ -105,7 +121,7 @@ class Utils {
                         headers: response.headers,
                         statusCode: response.statusCode,
                         statusMessage: response.statusMessage,
-                        body: body,
+                        body,
                     };
                     resolve(resp);
                 });
@@ -117,6 +133,23 @@ class Utils {
             request.end();
         });
     }
+    static trimStart(input, character) {
+        const exp = new RegExp(`^[${Utils.escapeRegExp(character)}]+`, "g");
+        return input.replace(exp, "");
+    }
+    static trimEnd(input, character) {
+        const exp = new RegExp(`[${Utils.escapeRegExp(character)}]+$`, "g");
+        return input.replace(exp, "");
+    }
+    static trim(input, character) {
+        input = this.trimStart(input, character);
+        input = this.trimEnd(input, character);
+        return input;
+    }
+    static escapeRegExp(input) {
+        return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
 }
+Utils.guidEmpty = "00000000-0000-0000-0000-000000000000";
 exports.Utils = Utils;
 //# sourceMappingURL=Utils.js.map
