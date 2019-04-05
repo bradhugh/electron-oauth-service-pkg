@@ -4,6 +4,6 @@ const Utils_1 = require("../Utils");
 const AdalLogger_1 = require("./AdalLogger");
 class CoreLoggerBase {
 }
-CoreLoggerBase.default = new AdalLogger_1.AdalLogger(Utils_1.Utils.guidEmpty);
+CoreLoggerBase.default = new AdalLogger_1.ConsoleLogger(Utils_1.Utils.guidEmpty);
 exports.CoreLoggerBase = CoreLoggerBase;
 //# sourceMappingURL=CoreLoggerBase.js.map

@@ -3,12 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const events_1 = require("events");
 const AuthenticationResult_1 = require("./AuthenticationResult");
 const AuthenticationResultEx_1 = require("./AuthenticationResultEx");
+const AdalLogger_1 = require("./core/AdalLogger");
 const TokenCacheKey_1 = require("./internal/cache/TokenCacheKey");
 const Pair_1 = require("./Pair");
 const TokenCacheNotificationArgs_1 = require("./TokenCacheNotificationArgs");
+const Utils_1 = require("./Utils");
 class TokenCache extends events_1.EventEmitter {
-    constructor(state) {
+    constructor(logger, state) {
         super();
+        this.logger = logger;
         this.$hasStateChanged = false;
         this.tokenCacheDictionary = new Map();
         if (state) {
@@ -84,7 +87,7 @@ class TokenCache extends events_1.EventEmitter {
         this.hasStateChanged = true;
         this.emit("onafterAccess", args);
     }
-    storeToCache(result, authority, resource, clientId, subjectType) {
+    storeToCacheAsync(result, authority, resource, clientId, subjectType, callState) {
         const uniqueId = result.result.userInfo ? result.result.userInfo.uniqueId : null;
         const displayableId = result.result.userInfo ? result.result.userInfo.displayableId : null;
         const args = new TokenCacheNotificationArgs_1.TokenCacheNotificationArgs();
@@ -97,7 +100,7 @@ class TokenCache extends events_1.EventEmitter {
         this.tokenCacheDictionary.set(key.toStringKey(), result);
         this.hasStateChanged = true;
     }
-    loadFromCache(cacheQueryData) {
+    loadFromCacheAsync(cacheQueryData, callState) {
         let resultEx = null;
         const kvp = this.loadSingleItemFromCache(cacheQueryData);
         if (kvp) {
@@ -109,11 +112,11 @@ class TokenCache extends events_1.EventEmitter {
             const tokenExtendedLifeTimeExpired = resultEx.result.extendedExpiresOn.getTime() <= now.getTime();
             if (key.authority !== cacheQueryData.authority) {
                 resultEx.result.accessToken = null;
-                console.log("Cross-tenant refresh token found in the cache");
+                this.logger.info("Cross-tenant refresh token found in the cache");
             }
             else if (tokenNearExpiry && !cacheQueryData.extendedLifeTimeEnabled) {
                 resultEx.result.accessToken = null;
-                console.log("An expired or near expiry token was found in the cache");
+                this.logger.info("An expired or near expiry token was found in the cache");
             }
             else if (!key.resourceEquals(cacheQueryData.resource)) {
                 const newResultEx = new AuthenticationResultEx_1.AuthenticationResultEx();
@@ -126,56 +129,48 @@ class TokenCache extends events_1.EventEmitter {
             else if ((!tokenExtendedLifeTimeExpired && cacheQueryData.extendedLifeTimeEnabled) && tokenNearExpiry) {
                 resultEx.result.extendedLifeTimeToken = true;
                 resultEx.result.expiresOn = resultEx.result.extendedExpiresOn;
-                console.log("The extendedLifeTime is enabled and a stale AT with extendedLifeTimeEnabled is returned.");
+                this.logger.info("The extendedLifeTime is enabled and a stale AT with extendedLifeTimeEnabled is returned.");
             }
             else if (tokenExtendedLifeTimeExpired) {
                 resultEx.result.accessToken = null;
-                console.log("The AT has expired its ExtendedLifeTime");
+                this.logger.info("The AT has expired its ExtendedLifeTime");
             }
             else {
                 const millisecondsLeft = resultEx.result.expiresOn.getTime() - now.getTime();
                 const minutesLeft = millisecondsLeft / 1000 / 60;
-                console.log(`${minutesLeft.toFixed(2)} minutes left until token in cache expires`);
+                this.logger.info(`${minutesLeft.toFixed(2)} minutes left until token in cache expires`);
             }
             if (!resultEx.result.accessToken && !resultEx.refreshToken) {
                 this.tokenCacheDictionary.delete(key.toStringKey());
-                console.log("An old item was removed from the cache");
+                this.logger.info("An old item was removed from the cache");
                 this.hasStateChanged = true;
                 resultEx = null;
             }
             if (resultEx !== null) {
                 resultEx.result.authority = key.authority;
-                console.log("A matching item (access token or refresh token or both) was found in the cache");
+                this.logger.info("A matching item (access token or refresh token or both) was found in the cache");
             }
         }
         else {
-            console.log(`No matching token was found in the cache`);
-            console.log(this.tokenCacheDictionary);
-            console.log(cacheQueryData);
+            this.logger.info(`No matching token was found in the cache`);
         }
         return resultEx;
     }
-    logCache() {
-        console.log("***** CACHE START *****");
-        console.log(this.tokenCacheDictionary);
-        console.log("***** CACHE END *****");
+    onBeforeAccess(args) {
+        this.emit("beforeAccess", args);
+    }
+    onAfterAccess(args) {
+        this.emit("afterAccess", args);
     }
     queryCache(authority, clientId, subjectType, uniqueId, displayableId) {
         const results = [];
         for (const stringKey of this.tokenCacheDictionary.keys()) {
             const cacheKey = TokenCacheKey_1.TokenCacheKey.fromStringKey(stringKey);
-            console.log(`Authority: ${(!authority || cacheKey.authority === authority)}`);
-            console.log(`clientId: ${(!clientId || cacheKey.clientIdEquals(clientId))}`);
-            console.log(`uniqueId: ${(!uniqueId || cacheKey.uniqueId === uniqueId)}`);
-            console.log(`displayableId: ${(!displayableId || cacheKey.displayableIdEquals(displayableId))}`);
-            console.log(`tokenSubjectType: ${cacheKey.tokenSubjectType === subjectType}`);
             if ((!authority || cacheKey.authority === authority)
                 && (!clientId || cacheKey.clientIdEquals(clientId))
                 && (!uniqueId || cacheKey.uniqueId === uniqueId)
                 && (!displayableId || cacheKey.displayableIdEquals(displayableId))
                 && cacheKey.tokenSubjectType === subjectType) {
-                console.log("queryCache returning cache entry with key:");
-                console.log(cacheKey);
                 const authResultEx = this.tokenCacheDictionary.get(stringKey);
                 results.push(new Pair_1.Pair(cacheKey, authResultEx));
             }
@@ -211,6 +206,7 @@ class TokenCache extends events_1.EventEmitter {
 }
 TokenCache.delimiter = ":::";
 TokenCache.expirationMarginInMinutes = 5;
-TokenCache.$defaultShared = new TokenCache();
+TokenCache.logger = new AdalLogger_1.ConsoleLogger(Utils_1.Utils.guidEmpty);
+TokenCache.$defaultShared = new TokenCache(TokenCache.logger);
 exports.TokenCache = TokenCache;
 //# sourceMappingURL=TokenCache.js.map

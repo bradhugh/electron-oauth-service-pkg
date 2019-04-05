@@ -18,34 +18,34 @@ class HttpError extends Error {
 }
 exports.HttpError = HttpError;
 class HttpManager {
-    sendPostAsync(endpoint, headers, bodyParameters, requestContext) {
+    sendPostAsync(endpoint, headers, bodyParameters, callState) {
         return __awaiter(this, void 0, void 0, function* () {
             const postData = querystring.stringify(bodyParameters);
             headers["content-type"] = "application/x-www-form-urlencoded";
             headers["content-length"] = Buffer.byteLength(postData).toString();
-            const resp = yield this.requestCommonAsync(endpoint, "POST", headers, postData, requestContext);
+            const resp = yield this.requestCommonAsync(endpoint, "POST", headers, postData, callState);
             return resp;
         });
     }
-    sendPostWithContentAsync(endpoint, headers, body, requestContext) {
+    sendPostWithContentAsync(endpoint, headers, body, callState) {
         return __awaiter(this, void 0, void 0, function* () {
-            const resp = yield this.requestCommonAsync(endpoint, "POST", headers, body, requestContext);
+            const resp = yield this.requestCommonAsync(endpoint, "POST", headers, body, callState);
             return resp;
         });
     }
-    sendGetAsync(endpoint, headers, requestContext) {
+    sendGetAsync(endpoint, headers, callState) {
         return __awaiter(this, void 0, void 0, function* () {
-            const resp = yield this.requestCommonAsync(endpoint, "GET", headers, null, requestContext);
+            const resp = yield this.requestCommonAsync(endpoint, "GET", headers, null, callState);
             return resp;
         });
     }
-    sendPostForceResponseAsync(endpoint, headers, body, requestContext) {
+    sendPostForceResponseAsync(endpoint, headers, body, callState) {
         return __awaiter(this, void 0, void 0, function* () {
-            const resp = yield this.requestCommonAsync(endpoint, "POST", headers, body, requestContext);
+            const resp = yield this.requestCommonAsync(endpoint, "POST", headers, body, callState);
             return resp;
         });
     }
-    requestCommonAsync(url, method, headers, body, _requestContext) {
+    requestCommonAsync(url, method, headers, body, callState) {
         return new Promise((resolve, reject) => {
             const request = electron_1.net.request({
                 url,

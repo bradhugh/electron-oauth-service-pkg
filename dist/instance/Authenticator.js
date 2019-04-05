@@ -8,6 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const Utils_1 = require("../Utils");
 const InstanceDiscovery_1 = require("./InstanceDiscovery");
 var AuthorityType;
 (function (AuthorityType) {
@@ -16,6 +17,7 @@ var AuthorityType;
 })(AuthorityType = exports.AuthorityType || (exports.AuthorityType = {}));
 class Authenticator {
     constructor(serviceBundle, authority, validateAuthority) {
+        this.correlationId = Utils_1.Utils.guidEmpty;
         this.tenantlessTenantName = "Common";
         this._validateAuthority = false;
         this._updatedFromTemplate = false;
@@ -29,6 +31,32 @@ class Authenticator {
         this._isTenantless = false;
         this._selfSignedJwtAudience = null;
         this.init(serviceBundle, authority, validateAuthority);
+    }
+    static ensureUrlEndsWithForwardSlash(uri) {
+        if (uri && !uri.endsWith("/")) {
+            uri = uri + "/";
+        }
+        return uri;
+    }
+    static detectAuthorityType(authority) {
+        if (!authority) {
+            throw new Error("authority cannot be null or empty");
+        }
+        const authorityUri = new URL(authority);
+        if (authorityUri.protocol !== "https") {
+            throw new Error("authority must be HTTPS");
+        }
+        const path = authorityUri.pathname.substring(1);
+        if (!path) {
+            throw new Error("The authority path is invalid");
+        }
+        const firstPath = path.substring(0, path.indexOf("/"));
+        const authorityType = Authenticator.isAdfsAuthority(firstPath) ?
+            AuthorityType.ADFS : AuthorityType.AAD;
+        return authorityType;
+    }
+    static isAdfsAuthority(firstPath) {
+        return firstPath.toLowerCase().startsWith("adfs");
     }
     get validateAuthority() {
         return this._validateAuthority;
@@ -57,22 +85,34 @@ class Authenticator {
     get selfSignedJwtAudience() {
         return this._selfSignedJwtAudience;
     }
-    UpdateAuthorityAsync(serviceBundle, authority, requestContext) {
+    get tokenUri() {
+        return this._tokenUri;
+    }
+    getAuthorityHost() {
+        return !!this.authority ? new URL(this.authority).host : null;
+    }
+    updateTenantId(tenantId) {
+        if (this.isTenantless && tenantId) {
+            this.replaceTenantlessTenant(tenantId);
+            this._updatedFromTemplate = false;
+        }
+    }
+    updateAuthorityAsync(serviceBundle, authority, callState) {
         return __awaiter(this, void 0, void 0, function* () {
             this.init(serviceBundle, authority, this.validateAuthority);
             this._updatedFromTemplate = false;
-            yield this.UpdateFromTemplateAsync(requestContext);
+            yield this.updateFromTemplateAsync(callState);
         });
     }
-    UpdateFromTemplateAsync(requestContext) {
+    updateFromTemplateAsync(callState) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this._updatedFromTemplate) {
                 const authorityUri = new URL(this.authority);
-                var host = authorityUri.host;
+                let host = authorityUri.host;
                 const segments = authorityUri.pathname.split("/");
                 const tenant = segments[segments.length - 1];
-                if (this.authorityType == AuthorityType.AAD) {
-                    var metadata = yield this.serviceBundle.instanceDiscovery.getMetadataEntryAsync(authorityUri, this.validateAuthority, requestContext);
+                if (this.authorityType === AuthorityType.AAD) {
+                    const metadata = yield this.serviceBundle.instanceDiscovery.getMetadataEntryAsync(authorityUri, this.validateAuthority, callState);
                     host = metadata.preferred_network;
                 }
                 else {
@@ -88,40 +128,19 @@ class Authenticator {
             }
         });
     }
-    static ensureUrlEndsWithForwardSlash(uri) {
-        if (uri && !uri.endsWith("/")) {
-            uri = uri + "/";
-        }
-        return uri;
-    }
-    static DetectAuthorityType(authority) {
-        if (!authority) {
-            throw new Error("authority cannot be null or empty");
-        }
-        const authorityUri = new URL(authority);
-        if (authorityUri.protocol !== "https") {
-            throw new Error("authority must be HTTPS");
-        }
-        const path = authorityUri.pathname.substring(1);
-        if (!path) {
-            throw new Error("The authority path is invalid");
-        }
-        const firstPath = path.substring(0, path.indexOf("/"));
-        const authorityType = Authenticator.isAdfsAuthority(firstPath) ? AuthorityType.ADFS : AuthorityType.AAD;
-        return authorityType;
-    }
-    static isAdfsAuthority(firstPath) {
-        return firstPath.toLowerCase().startsWith("adfs");
-    }
     init(serviceBundle, authority, validateAuthority) {
         this._authority = Authenticator.ensureUrlEndsWithForwardSlash(authority);
-        this._authorityType = Authenticator.DetectAuthorityType(authority);
+        this._authorityType = Authenticator.detectAuthorityType(authority);
         if (this.authorityType !== AuthorityType.AAD && validateAuthority) {
             throw new Error("UnsupportedAuthorityValidation");
         }
         this._validateAuthority = true;
         this._serviceBundle = serviceBundle;
     }
+    replaceTenantlessTenant(tenantId) {
+        this._authority = this.authority.replace(Authenticator.tenantNameRegex, tenantId);
+    }
 }
+Authenticator.tenantNameRegex = /common/i;
 exports.Authenticator = Authenticator;
 //# sourceMappingURL=Authenticator.js.map

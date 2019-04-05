@@ -1,28 +1,28 @@
 import { IHttpManager } from "../core/Http/HttpManager";
-import { RequestContext } from "../core/RequestContext";
-export interface InstanceDiscoveryMetadataEntry {
+import { CallState } from "../internal/CallState";
+export interface IInstanceDiscoveryMetadataEntry {
     preferred_network: string;
     preferred_cache: string;
     aliases: string[];
 }
-export interface InstanceDiscoveryResponse {
+export interface IInstanceDiscoveryResponse {
     tenant_discovery_endpoint: string;
-    metadata: InstanceDiscoveryMetadataEntry[];
+    metadata: IInstanceDiscoveryMetadataEntry[];
 }
 export declare class InstanceDiscovery {
     private httpManager;
     static defaultTrustedAuthority: string;
+    static isWhitelisted(authorityHost: string): boolean;
+    static formatAuthorizeEndpoint(host: string, tenant: string): string;
     private static whitelistedAuthorities;
     private static whitelistedDomains;
-    constructor(httpManager: IHttpManager);
-    static isWhitelisted(authorityHost: string): boolean;
-    instanceCache: {
-        [key: string]: InstanceDiscoveryMetadataEntry;
-    };
-    getMetadataEntryAsync(authority: URL, validateAuthority: boolean, requestContext: RequestContext): Promise<InstanceDiscoveryMetadataEntry>;
-    discoverAsync(authority: URL, validateAuthority: boolean, requestContext: RequestContext): Promise<void>;
-    addMetadataEntry(host: string): boolean;
-    static formatAuthorizeEndpoint(host: string, tenant: string): string;
     private static getTenant;
     private static getHost;
+    instanceCache: {
+        [key: string]: IInstanceDiscoveryMetadataEntry;
+    };
+    constructor(httpManager: IHttpManager);
+    getMetadataEntryAsync(authority: URL, validateAuthority: boolean, callState: CallState): Promise<IInstanceDiscoveryMetadataEntry>;
+    discoverAsync(authority: URL, validateAuthority: boolean, callState: CallState): Promise<void>;
+    addMetadataEntry(host: string): boolean;
 }

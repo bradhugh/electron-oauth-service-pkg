@@ -1,51 +1,78 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-class AdalLogger {
+class ConsoleLogger {
     constructor(correlationId) {
         this.correlationId = correlationId;
+        this.piiLoggingEnabled = false;
     }
     error(messageScrubbed) {
-        console.log(messageScrubbed);
+        console.log(`[ELOAS] [ERROR] ${messageScrubbed}`);
     }
     errorPii(messageWithPii) {
-        console.log(messageWithPii);
+        if (this.piiLoggingEnabled) {
+            console.log(`[ELOAS] [ERROR] ${messageWithPii}`);
+        }
     }
     errorExPii(exWithPii) {
-        console.log(exWithPii);
+        if (this.piiLoggingEnabled) {
+            console.log("[ELOAS] [ERROR]");
+            console.log(exWithPii);
+        }
     }
     errorExPiiWithPrefix(exWithPii, prefix) {
-        console.log(exWithPii);
+        if (this.piiLoggingEnabled) {
+            console.log(`[ELOAS] [ERROR] ${prefix}`);
+            console.log(exWithPii);
+        }
     }
     warning(messageScrubbed) {
-        console.log(messageScrubbed);
+        console.log(`[ELOAS] [WARN] ${messageScrubbed}`);
     }
     warningPii(messageWithPii) {
-        console.log(messageWithPii);
+        if (this.piiLoggingEnabled) {
+            console.log(`[ELOAS] [WARN] ${messageWithPii}`);
+        }
     }
     warningExPii(exWithPii) {
-        console.log(exWithPii);
+        if (this.piiLoggingEnabled) {
+            console.log("[ELOAS] [WARN]");
+            console.log(exWithPii);
+        }
     }
     warningExPiiWithPrefix(exWithPii, prefix) {
-        console.log(exWithPii);
+        if (this.piiLoggingEnabled) {
+            console.log(`[ELOAS] [WARN] ${prefix}`);
+            console.log(exWithPii);
+        }
     }
     info(messageScrubbed) {
-        console.log(messageScrubbed);
+        console.log(`[ELOAS] [INFO] ${messageScrubbed}`);
     }
     infoPii(messageWithPii) {
-        console.log(messageWithPii);
+        if (this.piiLoggingEnabled) {
+            console.log(`[ELOAS] [INFO] ${messageWithPii}`);
+        }
     }
     infoExPii(exWithPii) {
-        console.log(exWithPii);
+        if (this.piiLoggingEnabled) {
+            console.log("[ELOAS] [INFO]");
+            console.log(exWithPii);
+        }
     }
     infoExPiiWithPrefix(exWithPii, prefix) {
-        console.log(exWithPii);
+        if (this.piiLoggingEnabled) {
+            console.log(`[ELOAS] [INFO] ${prefix}`);
+            console.log(exWithPii);
+        }
     }
     verbose(messageScrubbed) {
-        console.log(messageScrubbed);
+        console.log(`[ELOAS] [VERBOSE] ${messageScrubbed}`);
     }
     verbosePii(messageWithPii) {
-        console.log(messageWithPii);
+        if (this.piiLoggingEnabled) {
+            console.log(`[ELOAS] [VERBOSE] ${messageWithPii}`);
+        }
     }
 }
-exports.AdalLogger = AdalLogger;
+exports.ConsoleLogger = ConsoleLogger;
 //# sourceMappingURL=AdalLogger.js.map

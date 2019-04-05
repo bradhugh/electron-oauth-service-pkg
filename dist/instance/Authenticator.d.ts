@@ -1,10 +1,15 @@
 import { IServiceBundle } from "../core/ServiceBundle";
-import { RequestContext } from "../core/RequestContext";
+import { CallState } from "../internal/CallState";
 export declare enum AuthorityType {
     AAD = 0,
     ADFS = 1
 }
 export declare class Authenticator {
+    static ensureUrlEndsWithForwardSlash(uri: string): string;
+    static detectAuthorityType(authority: string): AuthorityType;
+    private static tenantNameRegex;
+    private static isAdfsAuthority;
+    correlationId: string;
     private tenantlessTenantName;
     private _validateAuthority;
     private _updatedFromTemplate;
@@ -26,11 +31,12 @@ export declare class Authenticator {
     readonly userRealmUriPrefix: string;
     readonly isTenantless: boolean;
     readonly selfSignedJwtAudience: string;
+    readonly tokenUri: string;
     constructor(serviceBundle: IServiceBundle, authority: string, validateAuthority: boolean);
-    UpdateAuthorityAsync(serviceBundle: IServiceBundle, authority: string, requestContext: RequestContext): Promise<void>;
-    UpdateFromTemplateAsync(requestContext: RequestContext): Promise<void>;
-    static ensureUrlEndsWithForwardSlash(uri: string): string;
-    static DetectAuthorityType(authority: string): AuthorityType;
-    private static isAdfsAuthority;
+    getAuthorityHost(): string;
+    updateTenantId(tenantId: string): void;
+    updateAuthorityAsync(serviceBundle: IServiceBundle, authority: string, callState: CallState): Promise<void>;
+    updateFromTemplateAsync(callState: CallState): Promise<void>;
     private init;
+    private replaceTenantlessTenant;
 }

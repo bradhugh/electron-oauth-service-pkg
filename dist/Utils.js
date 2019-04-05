@@ -11,10 +11,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const electron_oauth_helper_1 = require("electron-oauth-helper");
 const querystring = require("querystring");
+const uuidv4 = require("uuid/v4");
 const AuthenticationResult_1 = require("./AuthenticationResult");
 const AuthenticationResultEx_1 = require("./AuthenticationResultEx");
 const TokenCacheKey_1 = require("./internal/cache/TokenCacheKey");
 class Utils {
+    static newGuid() {
+        return uuidv4();
+    }
+    static delay(milliseconds) {
+        return new Promise((resolve, _reject) => {
+            setTimeout(resolve, milliseconds);
+        });
+    }
     static tokenTimeToJsDate(time) {
         if (!time) {
             return null;
@@ -24,7 +33,7 @@ class Utils {
         const date = new Date(jan11970 + (secs * 1000));
         return date;
     }
-    static refreshAccessTokenAsync(url, authority, resource, clientId, resultEx, tokenCache) {
+    static refreshAccessTokenAsync(url, authority, resource, clientId, resultEx, tokenCache, callState) {
         return __awaiter(this, void 0, void 0, function* () {
             const postResponse = yield Utils.postRequestAsync(url, {
                 grant_type: "refresh_token",
@@ -34,33 +43,33 @@ class Utils {
                 client_id: clientId,
             });
             if (postResponse.statusCode !== 200) {
-                console.log("FAILED RESPONSE:");
-                console.log(postResponse.body.toString("utf8"));
+                callState.logger.error("refreshAccessTokenAsync: FAILED RESPONSE:");
+                callState.logger.errorPii(postResponse.body.toString("utf8"));
                 throw new Error(`Failed to refresh token. Error: ${postResponse.statusCode} - ${postResponse.statusMessage}`);
             }
             const responseString = postResponse.body.toString("utf8");
-            console.log("****POST RESPONSE****");
-            console.log(responseString);
+            callState.logger.verbosePii("****POST RESPONSE****");
+            callState.logger.verbosePii(responseString);
             const response = JSON.parse(responseString);
             resultEx.result = new AuthenticationResult_1.AuthenticationResult(response.token_type, response.access_token, Utils.tokenTimeToJsDate(response.expires_on), null);
             if (!response.refresh_token) {
-                console.log("Refresh token was missing from the token refresh response, " +
+                callState.logger.info("Refresh token was missing from the token refresh response, " +
                     "so the refresh token in the request is returned instead");
             }
             else {
                 resultEx.refreshToken = response.refresh_token;
             }
-            tokenCache.storeToCache(resultEx, authority, resource, clientId, TokenCacheKey_1.TokenSubjectType.Client);
+            tokenCache.storeToCacheAsync(resultEx, authority, resource, clientId, TokenCacheKey_1.TokenSubjectType.Client, callState);
             return resultEx;
         });
     }
-    static getAuthTokenInteractiveAsync(authority, authorizeUrl, accessTokenUrl, clientId, redirectUri, tenantId, resourceId, scope, tokenCache) {
+    static getAuthTokenInteractiveAsync(authority, authorizeUrl, accessTokenUrl, clientId, redirectUri, tenantId, resourceId, tokenCache, callState) {
         return __awaiter(this, void 0, void 0, function* () {
             const config = {
                 authorize_url: authorizeUrl,
                 access_token_url: accessTokenUrl,
                 client_id: clientId,
-                scope: `https://${tenantId}/${resourceId}/${scope}`,
+                resource: resourceId,
                 response_type: "code",
                 redirect_uri: redirectUri,
             };
@@ -78,8 +87,8 @@ class Utils {
                 const expiresInSeconds = parseInt(response.expires_in.toString(), 10);
                 let extExpiresInSeconds = parseInt(response.ext_expires_in.toString(), 10);
                 if (extExpiresInSeconds < expiresInSeconds) {
-                    console.log(`ExtendedExpiresIn(${extExpiresInSeconds}) is less than ExpiresIn(${expiresInSeconds}).` +
-                        "Set ExpiresIn as ExtendedExpiresIn");
+                    callState.logger.info(`ExtendedExpiresIn(${extExpiresInSeconds}) is less than ` +
+                        `ExpiresIn(${expiresInSeconds}). Set ExpiresIn as ExtendedExpiresIn`);
                     extExpiresInSeconds = expiresInSeconds;
                 }
                 const now = new Date();
@@ -90,7 +99,7 @@ class Utils {
                 exResult.result = result;
                 exResult.refreshToken = response.refresh_token;
                 exResult.error = null;
-                tokenCache.storeToCache(exResult, authority, resourceId, clientId, TokenCacheKey_1.TokenSubjectType.Client);
+                tokenCache.storeToCacheAsync(exResult, authority, resourceId, clientId, TokenCacheKey_1.TokenSubjectType.Client, callState);
                 return exResult;
             }
             finally {

@@ -1,20 +1,20 @@
-import { RequestContext } from "../RequestContext";
 import { HttpResponse } from "./HttpResponse";
+import { CallState } from "../../internal/CallState";
 export interface IHttpManager {
     sendPostAsync(endpoint: string, headers: {
         [key: string]: string;
     }, bodyParameters: {
         [key: string]: string;
-    }, requestContext: RequestContext): Promise<HttpResponse>;
+    }, callState: CallState): Promise<HttpResponse>;
     sendPostWithContentAsync(endpoint: string, headers: {
         [key: string]: string;
-    }, body: string, requestContext: RequestContext): Promise<HttpResponse>;
+    }, body: string, callState: CallState): Promise<HttpResponse>;
     sendGetAsync(endpoint: string, headers: {
         [key: string]: string;
-    }, requestContext: RequestContext): Promise<HttpResponse>;
+    }, callState: CallState): Promise<HttpResponse>;
     sendPostForceResponseAsync(endpoint: string, headers: {
         [key: string]: string;
-    }, body: string, requestContext: RequestContext): Promise<HttpResponse>;
+    }, body: string, callState: CallState): Promise<HttpResponse>;
 }
 export declare class HttpError extends Error {
     response: HttpResponse;
@@ -25,15 +25,15 @@ export declare class HttpManager implements IHttpManager {
         [key: string]: string;
     }, bodyParameters: {
         [key: string]: string;
-    }, requestContext: RequestContext): Promise<HttpResponse>;
+    }, callState: CallState): Promise<HttpResponse>;
     sendPostWithContentAsync(endpoint: string, headers: {
         [key: string]: string;
-    }, body: string, requestContext: RequestContext): Promise<HttpResponse>;
+    }, body: string, callState: CallState): Promise<HttpResponse>;
     sendGetAsync(endpoint: string, headers: {
         [key: string]: string;
-    }, requestContext: RequestContext): Promise<HttpResponse>;
+    }, callState: CallState): Promise<HttpResponse>;
     sendPostForceResponseAsync(endpoint: string, headers: {
         [key: string]: string;
-    }, body: string, requestContext: RequestContext): Promise<HttpResponse>;
+    }, body: string, callState: CallState): Promise<HttpResponse>;
     private requestCommonAsync;
 }

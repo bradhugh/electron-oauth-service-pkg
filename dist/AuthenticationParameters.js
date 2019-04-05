@@ -8,10 +8,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const AdalLogger_1 = require("./core/AdalLogger");
 const CoreLoggerBase_1 = require("./core/CoreLoggerBase");
-const RequestContext_1 = require("./core/RequestContext");
 const EncodingHelper_1 = require("./helpers/EncodingHelper");
+const CallState_1 = require("./internal/CallState");
 const Utils_1 = require("./Utils");
 class AuthenticationParameters {
     constructor(httpManager) {
@@ -61,7 +60,7 @@ class AuthenticationParameters {
             }
             const authParams = null;
             try {
-                yield this.httpManager.sendGetAsync(resourceUrl.href, null, new RequestContext_1.RequestContext(null, new AdalLogger_1.AdalLogger(Utils_1.Utils.guidEmpty)));
+                yield this.httpManager.sendGetAsync(resourceUrl.href, null, new CallState_1.CallState(Utils_1.Utils.guidEmpty));
                 const ex = new Error("AdalError.UnauthorizedResponseExpected");
                 CoreLoggerBase_1.CoreLoggerBase.default.errorExPii(ex);
                 throw ex;

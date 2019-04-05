@@ -5,12 +5,64 @@ class EncodingHelper {
     static parseKeyValueListStrict(input, delimiter, urlDecode, lowercaseKeys, requestContext) {
         return EncodingHelper.parseKeyValueList(input, delimiter, urlDecode, lowercaseKeys, requestContext, true);
     }
+    static urlDecode(message) {
+        if (!message) {
+            return message;
+        }
+        message = message.replace("+", "%20");
+        message = unescape(message);
+        return message;
+    }
+    static urlEncode(message) {
+        if (!message) {
+            return null;
+        }
+        return escape(message);
+    }
+    static splitWithQuotes(input, delimiter) {
+        const items = [];
+        if (!input) {
+            return items;
+        }
+        let startIndex = 0;
+        let insideString = false;
+        let item = null;
+        for (let i = 0; i < input.length; i++) {
+            if (input[i] === delimiter && !insideString) {
+                item = input.substring(startIndex, i - startIndex);
+                if (item.trim()) {
+                    items.push(item);
+                }
+                startIndex = i + 1;
+            }
+            else if (input[i] === '"') {
+                insideString = !insideString;
+            }
+        }
+        item = input.substring(startIndex);
+        if (item.trim()) {
+            items.push(item);
+        }
+        return items;
+    }
+    static addKeyValueString(messageBuilder, key, value) {
+        const delimiter = (messageBuilder.length === 0) ? "" : "&";
+        messageBuilder += `${delimiter}${key}=`;
+        messageBuilder += value;
+        return messageBuilder;
+    }
+    static deserializeResponse(response) {
+        if (!response) {
+            return null;
+        }
+        return JSON.parse(response);
+    }
     static parseKeyValueList(input, delimiter, urlDecode, lowercaseKeys, requestContext, strict) {
-        var response = {};
+        const response = {};
         const queryPairs = EncodingHelper.splitWithQuotes(input, delimiter);
         for (const queryPair of queryPairs) {
-            const pair = EncodingHelper.splitWithQuotes(queryPair, '=');
-            if (pair.length == 2 && pair[0] && pair[1]) {
+            const pair = EncodingHelper.splitWithQuotes(queryPair, "=");
+            if (pair.length === 2 && pair[0] && pair[1]) {
                 let key = pair[0];
                 let value = pair[1];
                 if (urlDecode) {
@@ -32,40 +84,6 @@ class EncodingHelper {
             }
         }
         return response;
-    }
-    static urlDecode(message) {
-        if (!message) {
-            return message;
-        }
-        message = message.replace("+", "%20");
-        message = unescape(message);
-        return message;
-    }
-    static splitWithQuotes(input, delimiter) {
-        const items = [];
-        if (!input) {
-            return items;
-        }
-        let startIndex = 0;
-        let insideString = false;
-        let item = null;
-        for (let i = 0; i < input.length; i++) {
-            if (input[i] == delimiter && !insideString) {
-                item = input.substring(startIndex, i - startIndex);
-                if (item.trim()) {
-                    items.push(item);
-                }
-                startIndex = i + 1;
-            }
-            else if (input[i] == '"') {
-                insideString = !insideString;
-            }
-        }
-        item = input.substring(startIndex);
-        if (item.trim()) {
-            items.push(item);
-        }
-        return items;
     }
 }
 exports.EncodingHelper = EncodingHelper;

@@ -1,5 +1,5 @@
 import { ICoreLogger } from "./CoreLoggerBase";
-export declare class AdalLogger implements ICoreLogger {
+export declare class ConsoleLogger implements ICoreLogger {
     correlationId: string;
     piiLoggingEnabled: boolean;
     constructor(correlationId: string);
