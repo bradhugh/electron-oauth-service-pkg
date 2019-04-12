@@ -1,0 +1,1 @@
+{"version":3,"file":"HttpRequestWrapperError.js","sourceRoot":"","sources":["../../src/internal/HttpRequestWrapperError.ts"],"names":[],"mappings":";;AAEA,MAAa,uBAAwB,SAAQ,KAAK;IAC9C,YAAmB,WAA6B,EAAS,UAAiB;QACtE,KAAK,CAAC,yBAAyB,CAAC,CAAC;QADlB,gBAAW,GAAX,WAAW,CAAkB;QAAS,eAAU,GAAV,UAAU,CAAO;IAE1E,CAAC;CACJ;AAJD,0DAIC"}

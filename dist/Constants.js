@@ -50,7 +50,6 @@ AdalErrorMessage.unknownUserType = "Unknown User Type";
 AdalErrorMessage.unsupportedAuthorityValidation = "Authority validation is not supported for this type of authority";
 AdalErrorMessage.unsupportedMultiRefreshToken = "This authority does not support refresh token for multiple resources. Pass null as a resource";
 AdalErrorMessage.authenticationCanceled = "User canceled authentication";
-AdalErrorMessage.userMismatch = "User '{0}' returned by service does not match user '{1}' in the request";
 AdalErrorMessage.userCredentialAssertionTypeEmpty = "credential.AssertionType cannot be empty";
 AdalErrorMessage.userInteractionRequired = "One of two conditions was encountered: "
     +
@@ -63,8 +62,9 @@ AdalErrorMessage.getUserNameFailed = "Failed to get user name";
 AdalErrorMessage.missingFederationMetadataUrl = "Federation Metadata Url is missing for federated user. This user type is unsupported.";
 AdalErrorMessage.specifyAnyUser = "If you do not need access token for any specific user, pass userId=UserIdentifier.AnyUser instead of userId=null.";
 AdalErrorMessage.integratedAuthFailed = "Integrated authentication failed. You may try an alternative authentication method";
-AdalErrorMessage.duplicateQueryParameterTemplate = "Duplicate query parameter '{0}' in extraQueryParameters";
 AdalErrorMessage.deviceCertificateNotFoundTemplate = "Device Certificate was not found for {0}";
 AdalErrorMessage.interactionRequired = "interaction_required";
+AdalErrorMessage.userMismatch = (user1, user2) => `User '${user1}' returned by service does not match user '${user2}' in the request`;
+AdalErrorMessage.duplicateQueryParameter = (param) => `Duplicate query parameter '${param}' in extraQueryParameters`;
 exports.AdalErrorMessage = AdalErrorMessage;
 //# sourceMappingURL=Constants.js.map

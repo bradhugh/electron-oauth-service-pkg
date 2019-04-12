@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 class ConsoleLogger {
     constructor(correlationId) {
         this.correlationId = correlationId;
-        this.piiLoggingEnabled = false;
+        this.piiLoggingEnabled = true;
     }
     error(messageScrubbed) {
         console.log(`[ELOAS] [ERROR] ${messageScrubbed}`);

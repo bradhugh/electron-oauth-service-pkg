@@ -1,15 +1,23 @@
 import { AuthenticationResult } from "./AuthenticationResult";
+import { Authenticator } from "./instance/Authenticator";
+import { IPlatformParameters } from "./internal/platform/IPlatformParameters";
+import { TokenCache } from "./TokenCache";
+import { UserIdentifier } from "./UserIdentifier";
+export declare enum AuthorityValidationType {
+    True = 0,
+    False = 1,
+    NotProvided = 2
+}
 export declare class AuthenticationContext {
-    private authority;
-    private authorizeUrl;
-    private accessTokenUrl;
-    private redirectUri;
-    private logger;
-    private tokenCache;
+    authority: string;
+    tokenCache: TokenCache;
+    extendedLifeTimeEnabled: boolean;
+    authenticator: Authenticator;
     private callState;
-    constructor(authority: string, authorizeUrl: string, accessTokenUrl: string, redirectUri: string);
-    acquireTokenSilentAsync(tenant: string, resource: string, clientId: string, redirectUri?: string): Promise<AuthenticationResult>;
+    constructor(authority: string, validateAuthority?: AuthorityValidationType, tokenCache?: TokenCache);
     getCachedResult(resource: string, clientId: string): AuthenticationResult;
-    acquireTokenAsync(tenant: string, resource: string, clientId: string, redirectUri?: string, silent?: boolean): Promise<AuthenticationResult>;
+    acquireTokenAsync(resource: string, clientId: string, redirectUri: string, parameters: IPlatformParameters, userId: UserIdentifier, extraQueryParameters: string): Promise<AuthenticationResult>;
     clearCache(): void;
+    private acquireTokenCommonAsync;
+    private createWebAuthenticationDialog;
 }

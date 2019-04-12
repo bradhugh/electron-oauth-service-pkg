@@ -27,6 +27,8 @@ export declare class TokenCache extends EventEmitter {
     clear(): void;
     storeToCacheAsync(result: AuthenticationResultEx, authority: string, resource: string, clientId: string, subjectType: TokenSubjectType, callState: CallState): void;
     loadFromCacheAsync(cacheQueryData: ICacheQueryData, callState: CallState): AuthenticationResultEx;
+    on(event: "beforeWrite" | "beforeAccess" | "afterAccess", listener: (args: TokenCacheNotificationArgs) => void): this;
+    onBeforeWrite(args: TokenCacheNotificationArgs): void;
     onBeforeAccess(args: TokenCacheNotificationArgs): void;
     onAfterAccess(args: TokenCacheNotificationArgs): void;
     private queryCache;

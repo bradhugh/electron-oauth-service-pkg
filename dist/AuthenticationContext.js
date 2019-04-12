@@ -1,33 +1,28 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const AuthenticationResult_1 = require("./AuthenticationResult");
-const AdalLogger_1 = require("./core/AdalLogger");
+const Authenticator_1 = require("./instance/Authenticator");
 const TokenCacheKey_1 = require("./internal/cache/TokenCacheKey");
 const CallState_1 = require("./internal/CallState");
+const ClientKey_1 = require("./internal/clientcreds/ClientKey");
+const AcquireTokenInteractiveHandler_1 = require("./internal/flows/AcquireTokenInteractiveHandler");
+const WebUIFactoryProvider_1 = require("./internal/platform/WebUIFactoryProvider");
 const TokenCache_1 = require("./TokenCache");
+const UserIdentifier_1 = require("./UserIdentifier");
 const Utils_1 = require("./Utils");
+var AuthorityValidationType;
+(function (AuthorityValidationType) {
+    AuthorityValidationType[AuthorityValidationType["True"] = 0] = "True";
+    AuthorityValidationType[AuthorityValidationType["False"] = 1] = "False";
+    AuthorityValidationType[AuthorityValidationType["NotProvided"] = 2] = "NotProvided";
+})(AuthorityValidationType = exports.AuthorityValidationType || (exports.AuthorityValidationType = {}));
 class AuthenticationContext {
-    constructor(authority, authorizeUrl, accessTokenUrl, redirectUri) {
+    constructor(authority, validateAuthority = AuthorityValidationType.NotProvided, tokenCache = TokenCache_1.TokenCache.defaultShared) {
         this.authority = authority;
-        this.authorizeUrl = authorizeUrl;
-        this.accessTokenUrl = accessTokenUrl;
-        this.redirectUri = redirectUri;
-        this.logger = new AdalLogger_1.ConsoleLogger(Utils_1.Utils.guidEmpty);
-        this.tokenCache = new TokenCache_1.TokenCache(this.logger);
+        this.tokenCache = tokenCache;
+        this.extendedLifeTimeEnabled = false;
         this.callState = new CallState_1.CallState(Utils_1.Utils.guidEmpty);
-    }
-    acquireTokenSilentAsync(tenant, resource, clientId, redirectUri = null) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.acquireTokenAsync(tenant, resource, clientId, redirectUri, true);
-        });
+        this.authenticator = new Authenticator_1.Authenticator(authority, (validateAuthority !== AuthorityValidationType.False));
     }
     getCachedResult(resource, clientId) {
         const exResult = this.tokenCache.loadFromCacheAsync({
@@ -42,36 +37,31 @@ class AuthenticationContext {
         }
         return new AuthenticationResult_1.AuthenticationResult(null, null, null);
     }
-    acquireTokenAsync(tenant, resource, clientId, redirectUri = null, silent = false) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!redirectUri) {
-                redirectUri = this.redirectUri;
-            }
-            let result = this.tokenCache.loadFromCacheAsync({
-                authority: this.authority,
-                resource,
-                clientId,
-                subjectType: TokenCacheKey_1.TokenSubjectType.Client,
-                extendedLifeTimeEnabled: false,
-            }, this.callState);
-            if (result && result.result && result.result.accessToken) {
-                return result.result;
-            }
-            if (result && result.refreshToken) {
-                result = yield Utils_1.Utils.refreshAccessTokenAsync(this.accessTokenUrl, this.authority, resource, clientId, result, this.tokenCache, this.callState);
-                if (result && result.result && result.result.accessToken) {
-                    return result.result;
-                }
-            }
-            if (silent) {
-                return result.result;
-            }
-            result = yield Utils_1.Utils.getAuthTokenInteractiveAsync(this.authority, this.authorizeUrl, this.accessTokenUrl, clientId, redirectUri, tenant, resource, this.tokenCache, this.callState);
-            return result.result;
-        });
+    async acquireTokenAsync(resource, clientId, redirectUri, parameters, userId, extraQueryParameters) {
+        userId = new UserIdentifier_1.UserIdentifier(userId.id, userId.type);
+        const result = await this.acquireTokenCommonAsync(resource, clientId, redirectUri, parameters, userId, extraQueryParameters);
+        return result;
     }
     clearCache() {
         this.tokenCache.clear();
+    }
+    async acquireTokenCommonAsync(resource, clientId, redirectUri, parameters, userId, extraQueryParameters = null, claims = null) {
+        const correlationId = Utils_1.Utils.newGuid();
+        const requestData = {
+            authenticator: this.authenticator,
+            tokenCache: this.tokenCache,
+            resource,
+            clientKey: new ClientKey_1.ClientKey(clientId),
+            extendedLifeTimeEnabled: this.extendedLifeTimeEnabled,
+            subjectType: TokenCacheKey_1.TokenSubjectType.User,
+            correlationId,
+        };
+        const handler = new AcquireTokenInteractiveHandler_1.AcquireTokenInteractiveHandler(requestData, new URL(redirectUri), parameters, userId, extraQueryParameters, this.createWebAuthenticationDialog(parameters), claims);
+        const result = await handler.runAsync();
+        return result;
+    }
+    createWebAuthenticationDialog(parameters) {
+        return WebUIFactoryProvider_1.WebUIFactoryProvider.webUIFactory.createAuthenticationDialog(parameters);
     }
 }
 exports.AuthenticationContext = AuthenticationContext;

@@ -2,8 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Utils_1 = require("../Utils");
 class EncodingHelper {
-    static parseKeyValueListStrict(input, delimiter, urlDecode, lowercaseKeys, requestContext) {
-        return EncodingHelper.parseKeyValueList(input, delimiter, urlDecode, lowercaseKeys, requestContext, true);
+    static parseKeyValueListStrict(input, delimiter, urlDecode, lowercaseKeys, callState) {
+        return EncodingHelper.parseKeyValueList(input, delimiter, urlDecode, lowercaseKeys, callState, true);
     }
     static urlDecode(message) {
         if (!message) {
@@ -57,8 +57,8 @@ class EncodingHelper {
         }
         return JSON.parse(response);
     }
-    static parseKeyValueList(input, delimiter, urlDecode, lowercaseKeys, requestContext, strict) {
-        const response = {};
+    static parseKeyValueList(input, delimiter, urlDecode, lowercaseKeys, callState, strict) {
+        const response = new Map();
         const queryPairs = EncodingHelper.splitWithQuotes(input, delimiter);
         for (const queryPair of queryPairs) {
             const pair = EncodingHelper.splitWithQuotes(queryPair, "=");
@@ -74,10 +74,10 @@ class EncodingHelper {
                 }
                 value = value.trim();
                 value = Utils_1.Utils.trim(value, '\"').trim();
-                if (response[key] && requestContext != null) {
-                    requestContext.logger.warning(`Key/value pair list contains redundant key '${key}'.`);
+                if (response.has(key) && callState) {
+                    callState.logger.warning(`Key/value pair list contains redundant key '${key}'.`);
                 }
-                response[key] = value;
+                response.set(key, value);
             }
             else if (strict && pair.length > 2) {
                 throw new Error("Invalid Argument: input");

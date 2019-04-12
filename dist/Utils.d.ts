@@ -14,7 +14,7 @@ export declare class Utils {
     static delay(milliseconds: number): Promise<void>;
     static tokenTimeToJsDate(time: string): Date;
     static refreshAccessTokenAsync(url: string, authority: string, resource: string, clientId: string, resultEx: AuthenticationResultEx, tokenCache: TokenCache, callState: CallState): Promise<AuthenticationResultEx>;
-    static getAuthTokenInteractiveAsync(authority: string, authorizeUrl: string, accessTokenUrl: string, clientId: string, redirectUri: string, tenantId: string, resourceId: string, tokenCache: TokenCache, callState: CallState): Promise<AuthenticationResultEx>;
+    static getAuthTokenInteractiveAsync(authority: string, authorizeUrl: string, accessTokenUrl: string, clientId: string, redirectUri: string, resourceId: string, tokenCache: TokenCache, callState: CallState): Promise<AuthenticationResultEx>;
     static postRequestAsync(url: string, parameters: object): Promise<IPostResponse>;
     static trimStart(input: string, character: string): string;
     static trimEnd(input: string, character: string): string;

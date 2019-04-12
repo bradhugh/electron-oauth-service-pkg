@@ -1,110 +1,91 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
+const AdalError_1 = require("../AdalError");
+const AdalErrorCode_1 = require("../AdalErrorCode");
+const AdalServiceError_1 = require("../AdalServiceError");
+const AdalHttpClient_1 = require("../internal/http/AdalHttpClient");
 class InstanceDiscovery {
-    constructor(httpManager) {
-        this.httpManager = httpManager;
-        this.instanceCache = {};
-    }
     static isWhitelisted(authorityHost) {
-        return InstanceDiscovery.whitelistedAuthorities.indexOf(authorityHost) !== -1
-            || InstanceDiscovery.whitelistedDomains.find((value, i, _arr) => value.endsWith(authorityHost.toLowerCase())) !== null;
+        return InstanceDiscovery.whitelistedAuthorities.has(authorityHost);
+    }
+    static async getMetadataEntryAsync(authority, validateAuthority, callState) {
+        if (!authority) {
+            throw new Error("authority cannot be null");
+        }
+        let entry = null;
+        if (!InstanceDiscovery.instanceCache.has(authority.host)) {
+            await InstanceDiscovery.discoverAsync(authority, validateAuthority, callState);
+            if (InstanceDiscovery.instanceCache.has(authority.host)) {
+                entry = InstanceDiscovery.instanceCache.get(authority.host);
+            }
+        }
+        else {
+            entry = InstanceDiscovery.instanceCache.get(authority.host);
+        }
+        return entry;
     }
     static formatAuthorizeEndpoint(host, tenant) {
         return `https://${host}/${tenant}/oauth2/authorize`;
     }
-    static getTenant(uri) {
-        const segments = uri.pathname.split("/");
-        return segments[segments.length - 1];
-    }
-    static getHost(uri) {
-        if (InstanceDiscovery.whitelistedDomains.find((domain) => uri.host.endsWith(domain))) {
-            const segments = uri.pathname.split("/");
-            return `${uri.host}/${segments[1]}`;
+    static addMetadataEntry(host) {
+        if (!host) {
+            throw new Error("host cannot be null!");
         }
-        else {
-            return uri.host;
-        }
-    }
-    getMetadataEntryAsync(authority, validateAuthority, callState) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!authority) {
-                throw new Error("Authority cannot be null");
-            }
-            let entry = this.instanceCache[authority.host];
-            if (!entry) {
-                this.discoverAsync(authority, validateAuthority, callState);
-                entry = this.instanceCache[authority.host];
-            }
-            return entry;
+        InstanceDiscovery.instanceCache.set(host, {
+            preferred_network: host,
+            preferred_cache: host,
+            aliases: null,
         });
+        return true;
     }
-    discoverAsync(authority, validateAuthority, callState) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const authorityHost = InstanceDiscovery.isWhitelisted(authority.host) ?
-                InstanceDiscovery.getHost(authority) : InstanceDiscovery.defaultTrustedAuthority;
-            const tenant = InstanceDiscovery.formatAuthorizeEndpoint(authority.host, InstanceDiscovery.getTenant(authority));
-            const instanceDiscoveryEndpoint = `https://${authorityHost}/common/discovery/instance?api-version=1.1&authorization_endpoint=${tenant}`;
-            let discoveryResponse = null;
-            try {
-                const httpResponse = yield this.httpManager.sendGetAsync(instanceDiscoveryEndpoint, {}, callState);
-                if (httpResponse.statusCode !== 200) {
-                    throw new Error(`Metadata discovery failed. Status: ${httpResponse.statusCode}`);
-                }
-                discoveryResponse = JSON.parse(httpResponse.body);
-                if (validateAuthority && !discoveryResponse.tenant_discovery_endpoint) {
-                    throw new Error("Authority not in valid list");
-                }
+    static getTenant(uri) {
+        return uri.href.split("/")[1];
+    }
+    static async discoverAsync(authority, validateAuthority, callState) {
+        const authorityHost = InstanceDiscovery.whitelistedAuthorities.has(authority.host) ?
+            authority.host : InstanceDiscovery.defaultTrustedAuthority;
+        const authorizeEndpoint = InstanceDiscovery.formatAuthorizeEndpoint(authority.host, InstanceDiscovery.getTenant(authority));
+        const instanceDiscoveryEndpoint = `https://${authorityHost}/common/discovery/instance?api-version=1.1&authorization_endpoint=${authorizeEndpoint}`;
+        const client = new AdalHttpClient_1.AdalHttpClient(instanceDiscoveryEndpoint, callState);
+        let discoveryResponse = null;
+        try {
+            discoveryResponse = await client.getResponseAsync();
+            if (validateAuthority && !discoveryResponse.tenant_discovery_endpoint) {
+                throw new AdalError_1.AdalError(AdalErrorCode_1.AdalErrorCode.authorityNotInValidList, null, null);
             }
-            catch (error) {
-                if (validateAuthority) {
-                    throw new Error("Could not fetch metadata, thus could not validate authority");
-                }
+        }
+        catch (error) {
+            if (!(error instanceof AdalServiceError_1.AdalServiceError)) {
+                throw error;
             }
-            if (discoveryResponse && discoveryResponse.metadata) {
-                for (const entry of discoveryResponse.metadata) {
+            const ex = error;
+            if (validateAuthority) {
+                throw new AdalError_1.AdalError((ex.errorCode === "invalid_instance")
+                    ? AdalErrorCode_1.AdalErrorCode.authorityNotInValidList
+                    : AdalErrorCode_1.AdalErrorCode.authorityValidationFailed, null, ex);
+            }
+        }
+        if (discoveryResponse && discoveryResponse.metadata) {
+            for (const entry of discoveryResponse.metadata) {
+                if (entry.aliases) {
                     for (const aliasedAuthority of entry.aliases) {
-                        this.instanceCache[aliasedAuthority] = entry;
+                        InstanceDiscovery.instanceCache.set(aliasedAuthority, entry);
                     }
                 }
             }
-            this.addMetadataEntry(authority.host);
-        });
-    }
-    addMetadataEntry(host) {
-        if (!host) {
-            throw new Error("Host cannot be null");
         }
-        this.instanceCache[host] = {
-            preferred_network: host,
-            preferred_cache: host,
-            aliases: [],
-        };
-        return true;
+        InstanceDiscovery.addMetadataEntry(authority.host);
     }
 }
 InstanceDiscovery.defaultTrustedAuthority = "login.microsoftonline.com";
-InstanceDiscovery.whitelistedAuthorities = [
+InstanceDiscovery.instanceCache = new Map();
+InstanceDiscovery.whitelistedAuthorities = new Set([
     "login.windows.net",
     "login.chinacloudapi.cn",
     "login.microsoftonline.de",
     "login-us.microsoftonline.com",
     "login.microsoftonline.us",
     "login.microsoftonline.com",
-];
-InstanceDiscovery.whitelistedDomains = [
-    "dsts.core.windows.net",
-    "dsts.core.chinacloudapi.cn",
-    "dsts.core.cloudapi.de",
-    "dsts.core.usgovcloudapi.net",
-    "dsts.core.azure-test.net",
-];
+]);
 exports.InstanceDiscovery = InstanceDiscovery;
 //# sourceMappingURL=InstanceDiscovery.js.map

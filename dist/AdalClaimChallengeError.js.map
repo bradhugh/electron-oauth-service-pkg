@@ -1,0 +1,1 @@
+{"version":3,"file":"AdalClaimChallengeError.js","sourceRoot":"","sources":["../src/AdalClaimChallengeError.ts"],"names":[],"mappings":";;AAAA,yDAAsD;AAKtD,MAAa,2BAA4B,SAAQ,mCAAgB;IAS7D,YAAY,SAAiB,EAAE,OAAe,EAAE,cAAqB,EAAE,MAAc;QACjF,KAAK,CAAC,SAAS,EAAE,OAAO,EAAE,IAAI,EAAE,cAAc,CAAC,CAAC;QAChD,IAAI,CAAC,MAAM,GAAG,MAAM,CAAC;IACzB,CAAC;CACJ;AAbD,kEAaC"}

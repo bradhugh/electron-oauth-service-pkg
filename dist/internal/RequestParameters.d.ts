@@ -1,4 +1,4 @@
-import { ClientKey } from "../flows/AcquireTokenHandlerBase";
+import { ClientKey } from "./clientcreds/ClientKey";
 export interface IRequestParameters {
     toString(): string;
 }

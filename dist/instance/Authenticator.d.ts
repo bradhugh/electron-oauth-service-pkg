@@ -1,4 +1,3 @@
-import { IServiceBundle } from "../core/ServiceBundle";
 import { CallState } from "../internal/CallState";
 export declare enum AuthorityType {
     AAD = 0,
@@ -15,7 +14,6 @@ export declare class Authenticator {
     private _updatedFromTemplate;
     private _authority;
     private _authorityType;
-    private _serviceBundle;
     private _authorizationUri;
     private _deviceCodeUri;
     private _tokenUri;
@@ -25,17 +23,16 @@ export declare class Authenticator {
     readonly validateAuthority: boolean;
     readonly authority: string;
     readonly authorityType: AuthorityType;
-    readonly serviceBundle: IServiceBundle;
     readonly authorizationUri: string;
     readonly deviceCodeUri: string;
     readonly userRealmUriPrefix: string;
     readonly isTenantless: boolean;
     readonly selfSignedJwtAudience: string;
     readonly tokenUri: string;
-    constructor(serviceBundle: IServiceBundle, authority: string, validateAuthority: boolean);
+    constructor(authority: string, validateAuthority: boolean);
     getAuthorityHost(): string;
     updateTenantId(tenantId: string): void;
-    updateAuthorityAsync(serviceBundle: IServiceBundle, authority: string, callState: CallState): Promise<void>;
+    updateAuthorityAsync(authority: string, callState: CallState): Promise<void>;
     updateFromTemplateAsync(callState: CallState): Promise<void>;
     private init;
     private replaceTenantlessTenant;

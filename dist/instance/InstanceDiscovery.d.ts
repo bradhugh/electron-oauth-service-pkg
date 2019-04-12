@@ -1,4 +1,3 @@
-import { IHttpManager } from "../core/Http/HttpManager";
 import { CallState } from "../internal/CallState";
 export interface IInstanceDiscoveryMetadataEntry {
     preferred_network: string;
@@ -10,19 +9,13 @@ export interface IInstanceDiscoveryResponse {
     metadata: IInstanceDiscoveryMetadataEntry[];
 }
 export declare class InstanceDiscovery {
-    private httpManager;
     static defaultTrustedAuthority: string;
+    static instanceCache: Map<string, IInstanceDiscoveryMetadataEntry>;
     static isWhitelisted(authorityHost: string): boolean;
+    static getMetadataEntryAsync(authority: URL, validateAuthority: boolean, callState: CallState): Promise<IInstanceDiscoveryMetadataEntry>;
     static formatAuthorizeEndpoint(host: string, tenant: string): string;
+    static addMetadataEntry(host: string): boolean;
     private static whitelistedAuthorities;
-    private static whitelistedDomains;
     private static getTenant;
-    private static getHost;
-    instanceCache: {
-        [key: string]: IInstanceDiscoveryMetadataEntry;
-    };
-    constructor(httpManager: IHttpManager);
-    getMetadataEntryAsync(authority: URL, validateAuthority: boolean, callState: CallState): Promise<IInstanceDiscoveryMetadataEntry>;
-    discoverAsync(authority: URL, validateAuthority: boolean, callState: CallState): Promise<void>;
-    addMetadataEntry(host: string): boolean;
+    private static discoverAsync;
 }

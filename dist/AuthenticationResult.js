@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const UserInfo_1 = require("./UserInfo");
 class AuthenticationResult {
     constructor(accessTokenType, accessToken, expiresOn, extendedExpiresOn) {
         this.accessTokenType = accessTokenType;
@@ -16,7 +17,7 @@ class AuthenticationResult {
         this.tenantId = tenantId;
         this.idToken = idToken;
         if (userInfo) {
-            this.userInfo = userInfo;
+            this.userInfo = new UserInfo_1.UserInfo(userInfo);
         }
     }
 }

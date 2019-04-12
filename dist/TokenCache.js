@@ -5,7 +5,9 @@ const AuthenticationResult_1 = require("./AuthenticationResult");
 const AuthenticationResultEx_1 = require("./AuthenticationResultEx");
 const AdalLogger_1 = require("./core/AdalLogger");
 const TokenCacheKey_1 = require("./internal/cache/TokenCacheKey");
+const CallState_1 = require("./internal/CallState");
 const Pair_1 = require("./Pair");
+const TokenCacheItem_1 = require("./TokenCacheItem");
 const TokenCacheNotificationArgs_1 = require("./TokenCacheNotificationArgs");
 const Utils_1 = require("./Utils");
 class TokenCache extends events_1.EventEmitter {
@@ -14,6 +16,9 @@ class TokenCache extends events_1.EventEmitter {
         this.logger = logger;
         this.$hasStateChanged = false;
         this.tokenCacheDictionary = new Map();
+        if (!logger) {
+            this.logger = TokenCache.logger;
+        }
         if (state) {
             this.deserialize(state);
         }
@@ -34,8 +39,16 @@ class TokenCache extends events_1.EventEmitter {
         return this.tokenCacheDictionary.size;
     }
     serialize() {
-        const serialized = JSON.stringify(this.tokenCacheDictionary);
-        return new Buffer(serialized, "utf8");
+        const store = {
+            version: 1,
+            entries: {},
+        };
+        for (const entry of this.tokenCacheDictionary) {
+            const result = entry["1"];
+            store.entries[entry["0"]] = result.serialize();
+        }
+        const serialized = JSON.stringify(store);
+        return Buffer.from(serialized, "utf8");
     }
     deserialize(state) {
         if (!state) {
@@ -43,14 +56,28 @@ class TokenCache extends events_1.EventEmitter {
             return;
         }
         const serialized = state.toString("utf8");
-        this.tokenCacheDictionary = JSON.parse(serialized);
+        const store = JSON.parse(serialized);
+        if (store.version !== 1) {
+            this.logger.warning(`Unexpected serialized TokenCache version ${store.version}`);
+            return;
+        }
+        this.tokenCacheDictionary.clear();
+        const keys = Object.keys(store.entries);
+        for (const key of keys) {
+            this.tokenCacheDictionary.set(key, AuthenticationResultEx_1.AuthenticationResultEx.deserialize(store.entries[key]));
+        }
     }
     readItems() {
         const args = new TokenCacheNotificationArgs_1.TokenCacheNotificationArgs();
         args.tokenCache = this;
-        this.emit("beforeAccess", args);
+        this.onBeforeAccess(args);
         const result = [];
-        this.emit("afterAccess", args);
+        for (const entry of this.tokenCacheDictionary) {
+            const key = TokenCacheKey_1.TokenCacheKey.fromStringKey(entry["0"]);
+            const item = new TokenCacheItem_1.TokenCacheItem(key, entry["1"].result);
+            result.push(item);
+        }
+        this.onAfterAccess(args);
         return result;
     }
     deleteItem(item) {
@@ -60,8 +87,8 @@ class TokenCache extends events_1.EventEmitter {
         args.clientId = item.clientId;
         args.uniqueId = item.uniqueId;
         args.displayableId = item.displayableId;
-        this.emit("beforeAccess", args);
-        this.emit("beforeWrite", args);
+        this.onBeforeAccess(args);
+        this.onBeforeWrite(args);
         let toRemoveStringKey = null;
         for (const stringKey of this.tokenCacheDictionary.keys()) {
             const key = TokenCacheKey_1.TokenCacheKey.fromStringKey(stringKey);
@@ -72,20 +99,23 @@ class TokenCache extends events_1.EventEmitter {
         }
         if (toRemoveStringKey) {
             this.tokenCacheDictionary.delete(toRemoveStringKey);
+            CallState_1.CallState.default.logger.info("One item removed successfully");
         }
         else {
+            CallState_1.CallState.default.logger.info("Item not Present in the Cache");
         }
         this.hasStateChanged = true;
-        this.emit("onAfterAccess", args);
+        this.onAfterAccess(args);
     }
     clear() {
         const args = new TokenCacheNotificationArgs_1.TokenCacheNotificationArgs();
         args.tokenCache = this;
-        this.emit("beforeAccess", args);
-        this.emit("beforeWrite", args);
+        this.onBeforeAccess(args);
+        this.onBeforeWrite(args);
         this.tokenCacheDictionary.clear();
+        CallState_1.CallState.default.logger.info("Successfully Cleared Cache");
         this.hasStateChanged = true;
-        this.emit("onafterAccess", args);
+        this.onAfterAccess(args);
     }
     storeToCacheAsync(result, authority, resource, clientId, subjectType, callState) {
         const uniqueId = result.result.userInfo ? result.result.userInfo.uniqueId : null;
@@ -95,7 +125,7 @@ class TokenCache extends events_1.EventEmitter {
         args.clientId = clientId;
         args.uniqueId = uniqueId;
         args.displayableId = displayableId;
-        this.emit("beforeWrite", args);
+        this.onBeforeWrite(args);
         const key = new TokenCacheKey_1.TokenCacheKey(authority, resource, clientId, subjectType, uniqueId, displayableId);
         this.tokenCacheDictionary.set(key.toStringKey(), result);
         this.hasStateChanged = true;
@@ -155,6 +185,12 @@ class TokenCache extends events_1.EventEmitter {
             this.logger.info(`No matching token was found in the cache`);
         }
         return resultEx;
+    }
+    on(event, listener) {
+        return super.on(event, listener);
+    }
+    onBeforeWrite(args) {
+        this.emit("beforeWrite", args);
     }
     onBeforeAccess(args) {
         this.emit("beforeAccess", args);

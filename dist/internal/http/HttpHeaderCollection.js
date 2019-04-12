@@ -4,6 +4,14 @@ class HttpHeaderCollection {
     constructor() {
         this.headerDictionary = new Map();
     }
+    static fromElectronHeaders(headers) {
+        const result = new HttpHeaderCollection();
+        const keys = Object.keys(headers);
+        for (const key of keys) {
+            result.headerDictionary.set(key, headers[key]);
+        }
+        return result;
+    }
     get(headerName) {
         const values = this.getValues(headerName);
         return values.join(",");
@@ -45,6 +53,18 @@ class HttpHeaderCollection {
             values.push(headerValue);
             this.headerDictionary.set(headerKey, values);
         }
+    }
+    getAllEntries() {
+        const entries = [];
+        for (const kvp of this.headerDictionary) {
+            const headerValues = kvp["1"];
+            if (headerValues) {
+                for (const value of headerValues) {
+                    entries.push({ name: kvp["0"], value });
+                }
+            }
+        }
+        return entries;
     }
 }
 exports.HttpHeaderCollection = HttpHeaderCollection;

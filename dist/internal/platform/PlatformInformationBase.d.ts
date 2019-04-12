@@ -13,6 +13,6 @@ export declare abstract class PlatformInformationBase {
     isDomainJoined(): boolean;
     addPromptBehaviorQueryParameter(parameters: IPlatformParameters, authorizationRequestParameters: DictionaryRequestParameters): void;
     getCacheLoadPolicy(parameters: IPlatformParameters): boolean;
-    ValidateRedirectUri(redirectUri: URL, callState: CallState): URL;
+    validateRedirectUri(redirectUri: URL, callState: CallState): URL;
     getRedirectUriAsString(redirectUri: URL, callState: CallState): string;
 }

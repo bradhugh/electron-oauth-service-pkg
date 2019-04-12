@@ -3,17 +3,16 @@ import { AuthenticationResultEx } from "../AuthenticationResultEx";
 import { Authenticator } from "../instance/Authenticator";
 import { TokenSubjectType } from "../internal/cache/TokenCacheKey";
 import { CallState } from "../internal/CallState";
+import { ClientKey } from "../internal/clientcreds/ClientKey";
+import { PlatformInformation } from "../internal/platform/PlatformInformation";
 import { IRequestData } from "../internal/RequestData";
-export declare class ClientKey {
-    clientId: string;
-    constructor(clientId: string);
-    addToParameters(parameters: Map<string, string>): void;
-}
-export declare class AcquireTokenHandlerBase {
+import { DictionaryRequestParameters } from "../internal/RequestParameters";
+import { UserIdentifierType } from "../UserIdentifier";
+export declare abstract class AcquireTokenHandlerBase {
     static createCallState(correlationId: string): CallState;
     protected static nullResource: string;
     callState: CallState;
-    protected supportAdfs: boolean;
+    protected supportADFS: boolean;
     protected authenticator: Authenticator;
     protected resource: string;
     protected clientKey: ClientKey;
@@ -23,15 +22,24 @@ export declare class AcquireTokenHandlerBase {
     protected displayableId: string;
     protected loadFromCache: boolean;
     protected storeToCache: boolean;
+    protected platformInformation: PlatformInformation;
+    protected brokerParameters: Map<string, string>;
+    protected userIdentifierType: UserIdentifierType;
     private tokenCache;
-    private brokerParameters;
     private cacheQueryData;
     private client;
     protected constructor(requestData: IRequestData);
     runAsync(): Promise<AuthenticationResult>;
+    protected abstract addAdditionalRequestParameters(requestParameters: DictionaryRequestParameters): void;
+    protected preTokenRequestAsync(): Promise<void>;
+    protected updateAuthorityAsync(updatedAuthority: string): Promise<void>;
+    protected postTokenRequestAsync(resultEx: AuthenticationResultEx): Promise<void>;
+    protected postRunAsync(result: AuthenticationResult): Promise<void>;
     protected preRunAsync(): Promise<void>;
     protected validateAuthorityType(): void;
+    protected sendTokenRequestAsync(): Promise<AuthenticationResultEx>;
     protected sendTokenRequestByRefreshTokenAsync(refreshToken: string): Promise<AuthenticationResultEx>;
+    private logReturnedToken;
     private sendHttpMessageAsync;
     private storeResultExToCacheAsync;
     private refreshAccessTokenAsync;

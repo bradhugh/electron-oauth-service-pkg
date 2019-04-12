@@ -2,8 +2,8 @@ import { CallState } from "../CallState";
 import { IHttpClient } from "../platform/IHttpClient";
 import { IRequestParameters } from "../RequestParameters";
 import { HttpHeaderCollection } from "./HttpHeaderCollection";
+import { IHttpWebResponse } from "./IHttpWebResponse";
 export declare class HttpClientWrapper implements IHttpClient {
-    static createResponseAsync(response: any): Promise<any>;
     bodyParameters: IRequestParameters;
     accept: string;
     contentType: string;
@@ -12,8 +12,9 @@ export declare class HttpClientWrapper implements IHttpClient {
     protected callState: CallState;
     private uri;
     private _timeoutInMilliSeconds;
-    private _maxResponseSizeInBytes;
     constructor(uri: string, callState: CallState);
     timeoutInMilliSeconds: number;
-    getResponseAsync(): Promise<any>;
+    getResponseAsync(): Promise<IHttpWebResponse>;
+    private electronRequestAsync;
+    private verifyCorrelationIdHeaderInReponse;
 }

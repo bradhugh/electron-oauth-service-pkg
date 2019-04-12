@@ -47,7 +47,6 @@ export declare class AdalErrorMessage {
     static unsupportedAuthorityValidation: string;
     static unsupportedMultiRefreshToken: string;
     static authenticationCanceled: string;
-    static userMismatch: string;
     static userCredentialAssertionTypeEmpty: string;
     static userInteractionRequired: string;
     static userRealmDiscoveryFailed: string;
@@ -56,7 +55,8 @@ export declare class AdalErrorMessage {
     static missingFederationMetadataUrl: string;
     static specifyAnyUser: string;
     static integratedAuthFailed: string;
-    static duplicateQueryParameterTemplate: string;
     static deviceCertificateNotFoundTemplate: string;
     static interactionRequired: string;
+    static userMismatch: (user1: string, user2: string) => string;
+    static duplicateQueryParameter: (param: string) => string;
 }

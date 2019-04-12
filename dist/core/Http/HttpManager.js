@@ -1,12 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 const querystring = require("querystring");
@@ -18,32 +10,24 @@ class HttpError extends Error {
 }
 exports.HttpError = HttpError;
 class HttpManager {
-    sendPostAsync(endpoint, headers, bodyParameters, callState) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const postData = querystring.stringify(bodyParameters);
-            headers["content-type"] = "application/x-www-form-urlencoded";
-            headers["content-length"] = Buffer.byteLength(postData).toString();
-            const resp = yield this.requestCommonAsync(endpoint, "POST", headers, postData, callState);
-            return resp;
-        });
+    async sendPostAsync(endpoint, headers, bodyParameters, callState) {
+        const postData = querystring.stringify(bodyParameters);
+        headers["content-type"] = "application/x-www-form-urlencoded";
+        headers["content-length"] = Buffer.byteLength(postData).toString();
+        const resp = await this.requestCommonAsync(endpoint, "POST", headers, postData, callState);
+        return resp;
     }
-    sendPostWithContentAsync(endpoint, headers, body, callState) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const resp = yield this.requestCommonAsync(endpoint, "POST", headers, body, callState);
-            return resp;
-        });
+    async sendPostWithContentAsync(endpoint, headers, body, callState) {
+        const resp = await this.requestCommonAsync(endpoint, "POST", headers, body, callState);
+        return resp;
     }
-    sendGetAsync(endpoint, headers, callState) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const resp = yield this.requestCommonAsync(endpoint, "GET", headers, null, callState);
-            return resp;
-        });
+    async sendGetAsync(endpoint, headers, callState) {
+        const resp = await this.requestCommonAsync(endpoint, "GET", headers, null, callState);
+        return resp;
     }
-    sendPostForceResponseAsync(endpoint, headers, body, callState) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const resp = yield this.requestCommonAsync(endpoint, "POST", headers, body, callState);
-            return resp;
-        });
+    async sendPostForceResponseAsync(endpoint, headers, body, callState) {
+        const resp = await this.requestCommonAsync(endpoint, "POST", headers, body, callState);
+        return resp;
     }
     requestCommonAsync(url, method, headers, body, callState) {
         return new Promise((resolve, reject) => {

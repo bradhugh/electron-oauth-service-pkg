@@ -1,14 +1,7 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const CoreLoggerBase_1 = require("./core/CoreLoggerBase");
+const HttpManager_1 = require("./core/Http/HttpManager");
 const EncodingHelper_1 = require("./helpers/EncodingHelper");
 const CallState_1 = require("./internal/CallState");
 const Utils_1 = require("./Utils");
@@ -47,41 +40,42 @@ class AuthenticationParameters {
         }
         const authParams = new AuthenticationParameters(this.httpManager);
         let param;
-        param = authenticateHeaderItems[AuthenticationParameters.authorityKey];
+        param = authenticateHeaderItems.get(AuthenticationParameters.authorityKey);
         authParams.authority = !param ? null : param;
-        param = authenticateHeaderItems[AuthenticationParameters.resourceKey];
+        param = authenticateHeaderItems.get(AuthenticationParameters.resourceKey);
         authParams.resource = !param ? null : param;
         return authParams;
     }
-    createFromResourceUrlCommonAsync(resourceUrl) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (resourceUrl == null) {
-                throw new Error("resourceUrl cannot be null");
+    async createFromResourceUrlCommonAsync(resourceUrl) {
+        if (resourceUrl == null) {
+            throw new Error("resourceUrl cannot be null");
+        }
+        const authParams = null;
+        try {
+            await this.httpManager.sendGetAsync(resourceUrl.href, null, new CallState_1.CallState(Utils_1.Utils.guidEmpty));
+            const ex = new Error("AdalError.UnauthorizedResponseExpected");
+            CoreLoggerBase_1.CoreLoggerBase.default.errorExPii(ex);
+            throw ex;
+        }
+        catch (error) {
+            if (!(error instanceof HttpManager_1.HttpError)) {
+                throw error;
             }
-            const authParams = null;
-            try {
-                yield this.httpManager.sendGetAsync(resourceUrl.href, null, new CallState_1.CallState(Utils_1.Utils.guidEmpty));
-                const ex = new Error("AdalError.UnauthorizedResponseExpected");
-                CoreLoggerBase_1.CoreLoggerBase.default.errorExPii(ex);
-                throw ex;
-            }
-            catch (error) {
-                const httpError = error;
-                if (httpError) {
-                    const response = httpError.response;
-                    if (response == null) {
-                        const serviceEx = new Error("AdalErrorMessage.UnauthorizedHttpStatusCodeExpected");
-                        CoreLoggerBase_1.CoreLoggerBase.default.errorExPii(serviceEx);
-                        throw serviceEx;
-                    }
-                    throw new Error("Not implemented");
+            const httpError = error;
+            if (httpError) {
+                const response = httpError.response;
+                if (response == null) {
+                    const serviceEx = new Error("AdalErrorMessage.UnauthorizedHttpStatusCodeExpected");
+                    CoreLoggerBase_1.CoreLoggerBase.default.errorExPii(serviceEx);
+                    throw serviceEx;
                 }
-                else {
-                    throw error;
-                }
+                throw new Error("Not implemented");
             }
-            return authParams;
-        });
+            else {
+                throw error;
+            }
+        }
+        return authParams;
     }
     createFromUnauthorizedResponseCommon(response) {
         if (response == null) {

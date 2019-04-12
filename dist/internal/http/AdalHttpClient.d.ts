@@ -17,5 +17,5 @@ export declare class AdalHttpClient {
     getResponseAsync<T>(respondToDeviceAuthChallenge?: boolean): Promise<T>;
     private isDeviceAuthChallenge;
     private ParseChallengeData;
-    private HandleDeviceAuthChallengeAsync;
+    private handleDeviceAuthChallengeAsync;
 }
