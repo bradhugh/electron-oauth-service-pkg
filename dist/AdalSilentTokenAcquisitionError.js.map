@@ -1,0 +1,1 @@
+{"version":3,"file":"AdalSilentTokenAcquisitionError.js","sourceRoot":"","sources":["../src/AdalSilentTokenAcquisitionError.ts"],"names":[],"mappings":";;AAAA,2CAAwC;AACxC,mDAAgD;AAChD,2CAA+C;AAK/C,MAAa,mCAAoC,SAAQ,qBAAS;IAI9D,YAAY,UAAkB;QAC1B,KAAK,CAAC,6BAAa,CAAC,4BAA4B,EAAE,4BAAgB,CAAC,4BAA4B,EAAE,UAAU,CAAC,CAAC;IACjH,CAAC;CACJ;AAPD,kFAOC"}

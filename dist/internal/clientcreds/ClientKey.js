@@ -4,6 +4,7 @@ const OAuthConstants_1 = require("../oauth2/OAuthConstants");
 class ClientKey {
     constructor(clientId) {
         this.clientId = clientId;
+        this.hasCredential = false;
     }
     addToParameters(parameters) {
         if (this.clientId) {

@@ -6,6 +6,7 @@ const TokenCacheKey_1 = require("./internal/cache/TokenCacheKey");
 const CallState_1 = require("./internal/CallState");
 const ClientKey_1 = require("./internal/clientcreds/ClientKey");
 const AcquireTokenInteractiveHandler_1 = require("./internal/flows/AcquireTokenInteractiveHandler");
+const AcquireTokenSilentHandler_1 = require("./internal/flows/AcquireTokenSilentHandler");
 const WebUIFactoryProvider_1 = require("./internal/platform/WebUIFactoryProvider");
 const TokenCache_1 = require("./TokenCache");
 const UserIdentifier_1 = require("./UserIdentifier");
@@ -42,6 +43,10 @@ class AuthenticationContext {
         const result = await this.acquireTokenCommonAsync(resource, clientId, redirectUri, parameters, userId, extraQueryParameters);
         return result;
     }
+    async acquireTokenSilentAsync(resource, clientId, userId, parameters) {
+        userId = new UserIdentifier_1.UserIdentifier(userId.id, userId.type);
+        return await this.acquireTokenSilentCommonAsync(resource, new ClientKey_1.ClientKey(clientId), userId, parameters);
+    }
     clearCache() {
         this.tokenCache.clear();
     }
@@ -57,6 +62,21 @@ class AuthenticationContext {
             correlationId,
         };
         const handler = new AcquireTokenInteractiveHandler_1.AcquireTokenInteractiveHandler(requestData, new URL(redirectUri), parameters, userId, extraQueryParameters, this.createWebAuthenticationDialog(parameters), claims);
+        const result = await handler.runAsync();
+        return result;
+    }
+    async acquireTokenSilentCommonAsync(resource, clientKey, userId, parameters) {
+        const correlationId = Utils_1.Utils.newGuid();
+        const requestData = {
+            authenticator: this.authenticator,
+            tokenCache: this.tokenCache,
+            resource,
+            clientKey,
+            extendedLifeTimeEnabled: this.extendedLifeTimeEnabled,
+            subjectType: TokenCacheKey_1.TokenSubjectType.User,
+            correlationId,
+        };
+        const handler = new AcquireTokenSilentHandler_1.AcquireTokenSilentHandler(requestData, userId, parameters);
         const result = await handler.runAsync();
         return result;
     }

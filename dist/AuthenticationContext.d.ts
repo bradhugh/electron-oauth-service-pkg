@@ -17,7 +17,9 @@ export declare class AuthenticationContext {
     constructor(authority: string, validateAuthority?: AuthorityValidationType, tokenCache?: TokenCache);
     getCachedResult(resource: string, clientId: string): AuthenticationResult;
     acquireTokenAsync(resource: string, clientId: string, redirectUri: string, parameters: IPlatformParameters, userId: UserIdentifier, extraQueryParameters: string): Promise<AuthenticationResult>;
+    acquireTokenSilentAsync(resource: string, clientId: string, userId: UserIdentifier, parameters: IPlatformParameters): Promise<AuthenticationResult>;
     clearCache(): void;
     private acquireTokenCommonAsync;
+    private acquireTokenSilentCommonAsync;
     private createWebAuthenticationDialog;
 }
