@@ -5,6 +5,7 @@ const AdalErrorCode_1 = require("../AdalErrorCode");
 const AdalServiceError_1 = require("../AdalServiceError");
 const AuthenticationResultEx_1 = require("../AuthenticationResultEx");
 const Constants_1 = require("../Constants");
+const ConsoleLogger_1 = require("../core/ConsoleLogger");
 const Authenticator_1 = require("../instance/Authenticator");
 const InstanceDiscovery_1 = require("../instance/InstanceDiscovery");
 const TokenCacheKey_1 = require("../internal/cache/TokenCacheKey");
@@ -19,7 +20,7 @@ const TokenCacheNotificationArgs_1 = require("../TokenCacheNotificationArgs");
 const Utils_1 = require("../Utils");
 const BrokerParameter_1 = require("./BrokerParameter");
 class AcquireTokenHandlerBase {
-    constructor(requestData) {
+    constructor(requestData, logger) {
         this.loadFromCache = false;
         this.storeToCache = false;
         this.platformInformation = new PlatformInformation_1.PlatformInformation();
@@ -36,9 +37,8 @@ class AcquireTokenHandlerBase {
         };
         this.client = null;
         this.authenticator = requestData.authenticator;
-        this.callState = AcquireTokenHandlerBase.createCallState(requestData.correlationId !== Utils_1.Utils.guidEmpty
-            ? requestData.correlationId
-            : this.authenticator.correlationId);
+        this.callState = AcquireTokenHandlerBase.createCallState(requestData.correlationId !== Utils_1.Utils.guidEmpty ?
+            requestData.correlationId : this.authenticator.correlationId, logger);
         this.tokenCache = requestData.tokenCache;
         if (!requestData.resource) {
             throw new Error("requestData.resource must be set");
@@ -76,9 +76,10 @@ class AcquireTokenHandlerBase {
             `Authentication Target: ${TokenCacheKey_1.TokenSubjectType[requestData.subjectType]}\n\t`;
         this.callState.logger.infoPii(piiMsg);
     }
-    static createCallState(correlationId) {
-        correlationId = (correlationId !== Utils_1.Utils.guidEmpty) ? correlationId : Utils_1.Utils.newGuid();
-        return new CallState_1.CallState(correlationId);
+    static createCallState(correlationId, logger) {
+        correlationId = (correlationId && correlationId !== Utils_1.Utils.guidEmpty) ? correlationId : Utils_1.Utils.newGuid();
+        logger = logger ? logger : new ConsoleLogger_1.ConsoleLogger(correlationId);
+        return new CallState_1.CallState(correlationId, logger);
     }
     async runAsync() {
         let notifiedBeforeAccessCache = false;
@@ -200,7 +201,7 @@ class AcquireTokenHandlerBase {
         this.client.client.bodyParameters = requestParameters;
         const jsonResponse = await this.client.getResponseAsync();
         const tokenResponse = TokenResponse_1.TokenResponse.fromJson(jsonResponse);
-        return tokenResponse.getResult();
+        return tokenResponse.getResult(this.callState);
     }
     async storeResultExToCacheAsync(notifiedBeforeAccessCache) {
         if (this.storeToCache) {

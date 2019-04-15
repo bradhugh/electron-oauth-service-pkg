@@ -1,4 +1,4 @@
-export interface ICoreLogger {
+export interface ILogger {
     correlationId: string;
     piiLoggingEnabled: boolean;
     error(messageScrubbed: string): void;
@@ -15,7 +15,4 @@ export interface ICoreLogger {
     infoExPiiWithPrefix(exWithPii: Error, prefix: string): void;
     verbose(messageScrubbed: string): void;
     verbosePii(messageWithPii: string): void;
-}
-export declare class CoreLoggerBase {
-    static default: ICoreLogger;
 }

@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const AuthenticationResult_1 = require("./AuthenticationResult");
+const ConsoleLogger_1 = require("./core/ConsoleLogger");
 const Authenticator_1 = require("./instance/Authenticator");
 const TokenCacheKey_1 = require("./internal/cache/TokenCacheKey");
-const CallState_1 = require("./internal/CallState");
 const ClientKey_1 = require("./internal/clientcreds/ClientKey");
 const AcquireTokenInteractiveHandler_1 = require("./internal/flows/AcquireTokenInteractiveHandler");
 const AcquireTokenSilentHandler_1 = require("./internal/flows/AcquireTokenSilentHandler");
@@ -18,25 +17,15 @@ var AuthorityValidationType;
     AuthorityValidationType[AuthorityValidationType["NotProvided"] = 2] = "NotProvided";
 })(AuthorityValidationType = exports.AuthorityValidationType || (exports.AuthorityValidationType = {}));
 class AuthenticationContext {
-    constructor(authority, validateAuthority = AuthorityValidationType.NotProvided, tokenCache = TokenCache_1.TokenCache.defaultShared) {
+    constructor(authority, validateAuthority = AuthorityValidationType.NotProvided, tokenCache = TokenCache_1.TokenCache.defaultShared, logger) {
         this.authority = authority;
         this.tokenCache = tokenCache;
+        this.logger = logger;
         this.extendedLifeTimeEnabled = false;
-        this.callState = new CallState_1.CallState(Utils_1.Utils.guidEmpty);
-        this.authenticator = new Authenticator_1.Authenticator(authority, (validateAuthority !== AuthorityValidationType.False));
-    }
-    getCachedResult(resource, clientId) {
-        const exResult = this.tokenCache.loadFromCacheAsync({
-            authority: this.authority,
-            resource,
-            clientId,
-            subjectType: TokenCacheKey_1.TokenSubjectType.Client,
-            extendedLifeTimeEnabled: false,
-        }, this.callState);
-        if (exResult) {
-            return exResult.result;
+        if (!logger) {
+            this.logger = new ConsoleLogger_1.ConsoleLogger(Utils_1.Utils.guidEmpty);
         }
-        return new AuthenticationResult_1.AuthenticationResult(null, null, null);
+        this.authenticator = new Authenticator_1.Authenticator(authority, (validateAuthority !== AuthorityValidationType.False));
     }
     async acquireTokenAsync(resource, clientId, redirectUri, parameters, userId, extraQueryParameters) {
         userId = new UserIdentifier_1.UserIdentifier(userId.id, userId.type);
@@ -61,7 +50,7 @@ class AuthenticationContext {
             subjectType: TokenCacheKey_1.TokenSubjectType.User,
             correlationId,
         };
-        const handler = new AcquireTokenInteractiveHandler_1.AcquireTokenInteractiveHandler(requestData, new URL(redirectUri), parameters, userId, extraQueryParameters, this.createWebAuthenticationDialog(parameters), claims);
+        const handler = new AcquireTokenInteractiveHandler_1.AcquireTokenInteractiveHandler(requestData, new URL(redirectUri), parameters, userId, extraQueryParameters, this.createWebAuthenticationDialog(parameters), claims, this.logger);
         const result = await handler.runAsync();
         return result;
     }
@@ -76,7 +65,7 @@ class AuthenticationContext {
             subjectType: TokenCacheKey_1.TokenSubjectType.User,
             correlationId,
         };
-        const handler = new AcquireTokenSilentHandler_1.AcquireTokenSilentHandler(requestData, userId, parameters);
+        const handler = new AcquireTokenSilentHandler_1.AcquireTokenSilentHandler(requestData, userId, parameters, this.logger);
         const result = await handler.runAsync();
         return result;
     }

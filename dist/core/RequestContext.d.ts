@@ -1,7 +1,7 @@
-import { ICoreLogger } from "./CoreLoggerBase";
+import { ILogger } from "../ILogger";
 export declare class RequestContext {
     clientId: string;
-    logger: ICoreLogger;
+    logger: ILogger;
     telemetryRequestId: string;
-    constructor(clientId: string, logger: ICoreLogger);
+    constructor(clientId: string, logger: ILogger);
 }

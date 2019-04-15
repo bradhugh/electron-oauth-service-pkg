@@ -1,7 +1,6 @@
-import { ICoreLogger } from "../core/CoreLoggerBase";
+import { ILogger } from "../ILogger";
 export declare class CallState {
     correlationId: string;
-    static default: CallState;
-    logger: ICoreLogger;
-    constructor(correlationId: string);
+    logger: ILogger;
+    constructor(correlationId: string, logger: ILogger);
 }

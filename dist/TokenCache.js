@@ -3,9 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const events_1 = require("events");
 const AuthenticationResult_1 = require("./AuthenticationResult");
 const AuthenticationResultEx_1 = require("./AuthenticationResultEx");
-const AdalLogger_1 = require("./core/AdalLogger");
+const ConsoleLogger_1 = require("./core/ConsoleLogger");
 const TokenCacheKey_1 = require("./internal/cache/TokenCacheKey");
-const CallState_1 = require("./internal/CallState");
 const Pair_1 = require("./Pair");
 const TokenCacheItem_1 = require("./TokenCacheItem");
 const TokenCacheNotificationArgs_1 = require("./TokenCacheNotificationArgs");
@@ -17,7 +16,7 @@ class TokenCache extends events_1.EventEmitter {
         this.$hasStateChanged = false;
         this.tokenCacheDictionary = new Map();
         if (!logger) {
-            this.logger = TokenCache.logger;
+            this.logger = TokenCache.defaultLogger;
         }
         if (state) {
             this.deserialize(state);
@@ -99,10 +98,10 @@ class TokenCache extends events_1.EventEmitter {
         }
         if (toRemoveStringKey) {
             this.tokenCacheDictionary.delete(toRemoveStringKey);
-            CallState_1.CallState.default.logger.info("One item removed successfully");
+            this.logger.info("One item removed successfully");
         }
         else {
-            CallState_1.CallState.default.logger.info("Item not Present in the Cache");
+            this.logger.info("Item not Present in the Cache");
         }
         this.hasStateChanged = true;
         this.onAfterAccess(args);
@@ -113,7 +112,7 @@ class TokenCache extends events_1.EventEmitter {
         this.onBeforeAccess(args);
         this.onBeforeWrite(args);
         this.tokenCacheDictionary.clear();
-        CallState_1.CallState.default.logger.info("Successfully Cleared Cache");
+        this.logger.info("Successfully Cleared Cache");
         this.hasStateChanged = true;
         this.onAfterAccess(args);
     }
@@ -242,7 +241,7 @@ class TokenCache extends events_1.EventEmitter {
 }
 TokenCache.delimiter = ":::";
 TokenCache.expirationMarginInMinutes = 5;
-TokenCache.logger = new AdalLogger_1.ConsoleLogger(Utils_1.Utils.guidEmpty);
-TokenCache.$defaultShared = new TokenCache(TokenCache.logger);
+TokenCache.defaultLogger = new ConsoleLogger_1.ConsoleLogger(Utils_1.Utils.guidEmpty);
+TokenCache.$defaultShared = new TokenCache(TokenCache.defaultLogger);
 exports.TokenCache = TokenCache;
 //# sourceMappingURL=TokenCache.js.map

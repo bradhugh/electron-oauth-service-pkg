@@ -20,8 +20,8 @@ class AcquireTokenInteractiveHandler extends AcquireTokenHandlerBase_1.AcquireTo
         ub.host = newHost;
         return ub.href;
     }
-    constructor(requestData, redirectUri, parameters, userId, extraQueryParameters, webUI, claims) {
-        super(requestData);
+    constructor(requestData, redirectUri, parameters, userId, extraQueryParameters, webUI, claims, logger) {
+        super(requestData, logger);
         this.redirectUri = this.platformInformation.validateRedirectUri(redirectUri, this.callState);
         if (this.redirectUri.hash) {
             throw new Error(Constants_1.AdalErrorMessage.redirectUriContainsFragment);

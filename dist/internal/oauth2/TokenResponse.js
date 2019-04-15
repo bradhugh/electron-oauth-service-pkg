@@ -6,7 +6,6 @@ const AuthenticationResult_1 = require("../../AuthenticationResult");
 const AuthenticationResultEx_1 = require("../../AuthenticationResultEx");
 const Constants_1 = require("../../Constants");
 const UserInfo_1 = require("../../UserInfo");
-const CallState_1 = require("../CallState");
 const HttpStatusCode_1 = require("../http/HttpStatusCode");
 const IdToken_1 = require("./IdToken");
 class TokenResponseClaim {
@@ -73,9 +72,9 @@ class TokenResponse {
         resp.claims = jsonResp.claims;
         return resp;
     }
-    getResult() {
+    getResult(callState) {
         if (this.extendedExpiresIn < this.expiresIn) {
-            CallState_1.CallState.default.logger.info(`ExtendedExpiresIn(${this.extendedExpiresIn}) is less than ExpiresIn(${this.expiresIn}). ` +
+            callState.logger.info(`ExtendedExpiresIn(${this.extendedExpiresIn}) is less than ExpiresIn(${this.expiresIn}). ` +
                 "Set ExpiresIn as ExtendedExpiresIn");
             this.extendedExpiresIn = this.expiresIn;
         }

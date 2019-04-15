@@ -75,4 +75,4 @@ class ConsoleLogger {
     }
 }
 exports.ConsoleLogger = ConsoleLogger;
-//# sourceMappingURL=AdalLogger.js.map
+//# sourceMappingURL=ConsoleLogger.js.map

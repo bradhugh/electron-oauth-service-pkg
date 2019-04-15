@@ -1,5 +1,6 @@
 import { AuthenticationResult } from "../AuthenticationResult";
 import { AuthenticationResultEx } from "../AuthenticationResultEx";
+import { ILogger } from "../ILogger";
 import { Authenticator } from "../instance/Authenticator";
 import { TokenSubjectType } from "../internal/cache/TokenCacheKey";
 import { CallState } from "../internal/CallState";
@@ -9,7 +10,7 @@ import { IRequestData } from "../internal/RequestData";
 import { DictionaryRequestParameters } from "../internal/RequestParameters";
 import { UserIdentifierType } from "../UserIdentifier";
 export declare abstract class AcquireTokenHandlerBase {
-    static createCallState(correlationId: string): CallState;
+    static createCallState(correlationId: string, logger: ILogger): CallState;
     protected static nullResource: string;
     callState: CallState;
     protected supportADFS: boolean;
@@ -28,7 +29,7 @@ export declare abstract class AcquireTokenHandlerBase {
     private tokenCache;
     private cacheQueryData;
     private client;
-    protected constructor(requestData: IRequestData);
+    protected constructor(requestData: IRequestData, logger: ILogger);
     runAsync(): Promise<AuthenticationResult>;
     protected abstract addAdditionalRequestParameters(requestParameters: DictionaryRequestParameters): void;
     protected preTokenRequestAsync(): Promise<void>;

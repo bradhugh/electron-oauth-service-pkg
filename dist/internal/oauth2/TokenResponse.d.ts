@@ -1,4 +1,5 @@
 import { AuthenticationResultEx } from "../../AuthenticationResultEx";
+import { CallState } from "../CallState";
 import { IHttpWebResponse } from "../http/IHttpWebResponse";
 export declare class TokenResponseClaim {
     static code: string;
@@ -52,6 +53,6 @@ export declare class TokenResponse {
     correlationId: string;
     claims: string;
     authority: string;
-    getResult(): AuthenticationResultEx;
+    getResult(callState: CallState): AuthenticationResultEx;
     getResultWithDates(expiresOn: Date, extendedExpiresOn: Date): AuthenticationResultEx;
 }

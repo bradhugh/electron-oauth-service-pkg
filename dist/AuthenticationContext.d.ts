@@ -1,4 +1,5 @@
 import { AuthenticationResult } from "./AuthenticationResult";
+import { ILogger } from "./ILogger";
 import { Authenticator } from "./instance/Authenticator";
 import { IPlatformParameters } from "./internal/platform/IPlatformParameters";
 import { TokenCache } from "./TokenCache";
@@ -11,11 +12,10 @@ export declare enum AuthorityValidationType {
 export declare class AuthenticationContext {
     authority: string;
     tokenCache: TokenCache;
+    private logger?;
     extendedLifeTimeEnabled: boolean;
     authenticator: Authenticator;
-    private callState;
-    constructor(authority: string, validateAuthority?: AuthorityValidationType, tokenCache?: TokenCache);
-    getCachedResult(resource: string, clientId: string): AuthenticationResult;
+    constructor(authority: string, validateAuthority?: AuthorityValidationType, tokenCache?: TokenCache, logger?: ILogger);
     acquireTokenAsync(resource: string, clientId: string, redirectUri: string, parameters: IPlatformParameters, userId: UserIdentifier, extraQueryParameters: string): Promise<AuthenticationResult>;
     acquireTokenSilentAsync(resource: string, clientId: string, userId: UserIdentifier, parameters: IPlatformParameters): Promise<AuthenticationResult>;
     clearCache(): void;

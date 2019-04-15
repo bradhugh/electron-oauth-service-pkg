@@ -1,5 +1,6 @@
 import { AuthenticationResultEx } from "../../AuthenticationResultEx";
 import { AcquireTokenHandlerBase } from "../../flows/AcquireTokenHandlerBase";
+import { ILogger } from "../../ILogger";
 import { UserIdentifier } from "../../UserIdentifier";
 import { AuthorizationResult } from "../AuthorizationResult";
 import { IPlatformParameters } from "../platform/IPlatformParameters";
@@ -16,7 +17,7 @@ export declare class AcquireTokenInteractiveHandler extends AcquireTokenHandlerB
     private webUi;
     private userId;
     private claims;
-    constructor(requestData: IRequestData, redirectUri: URL, parameters: IPlatformParameters, userId: UserIdentifier, extraQueryParameters: string, webUI: IWebUI, claims: string);
+    constructor(requestData: IRequestData, redirectUri: URL, parameters: IPlatformParameters, userId: UserIdentifier, extraQueryParameters: string, webUI: IWebUI, claims: string, logger: ILogger);
     AcquireAuthorizationAsync(): Promise<void>;
     createAuthorizationUriAsync(correlationId: string): Promise<URL>;
     protected preTokenRequestAsync(): Promise<void>;

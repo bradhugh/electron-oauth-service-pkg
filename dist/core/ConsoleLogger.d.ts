@@ -1,5 +1,5 @@
-import { ICoreLogger } from "./CoreLoggerBase";
-export declare class ConsoleLogger implements ICoreLogger {
+import { ILogger } from "../ILogger";
+export declare class ConsoleLogger implements ILogger {
     correlationId: string;
     piiLoggingEnabled: boolean;
     constructor(correlationId: string);

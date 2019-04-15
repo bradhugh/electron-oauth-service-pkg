@@ -7,8 +7,8 @@ const BrokerParameter_1 = require("../../flows/BrokerParameter");
 const UserIdentifier_1 = require("../../UserIdentifier");
 const TokenCacheKey_1 = require("../cache/TokenCacheKey");
 class AcquireTokenSilentHandler extends AcquireTokenHandlerBase_1.AcquireTokenHandlerBase {
-    constructor(requestData, userId, parameters) {
-        super(requestData);
+    constructor(requestData, userId, parameters, logger) {
+        super(requestData, logger);
         if (!userId) {
             throw new Error(Constants_1.AdalErrorMessage.specifyAnyUser);
         }
