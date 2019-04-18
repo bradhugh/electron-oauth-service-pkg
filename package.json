@@ -1,6 +1,6 @@
 {
   "name": "electron-oauth-service",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "description": "An authentication service for electron applications",
   "main": "dist/index.js",
   "scripts": {
@@ -22,7 +22,6 @@
   },
   "homepage": "https://github.com/bradhugh/electron-oauth-service#readme",
   "dependencies": {
-    "electron-oauth-helper": "git://github.com/bradhugh/electron-oauth-helper.git#fixes",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
