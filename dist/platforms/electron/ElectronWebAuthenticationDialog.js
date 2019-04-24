@@ -40,6 +40,19 @@ class ElectronWebAuthenticationDialog {
                     resolve(new AuthorizationResult_1.AuthorizationResult(AuthorizationResult_1.AuthorizationStatus.Success, url));
                 }
             });
+            if (process.platform === "win32") {
+                this.window.webContents.on("select-client-certificate", (event, url, certList, callback) => {
+                    if (!certList.length) {
+                        return false;
+                    }
+                    event.preventDefault();
+                    const certIndex = require("select-client-cert").selectClientCert(certList.map((cert) => cert.data));
+                    if (certIndex >= 0) {
+                        callback(certList[certIndex]);
+                    }
+                    return true;
+                });
+            }
         });
     }
     isRedirectUrl(url) {
